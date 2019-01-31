@@ -6,7 +6,10 @@
 #include "blas_TA.h"
 #include "network_TA.h"
 
-#include "darknet_TA.h"
+#include "darknetp_ta.h"
+
+#include <tee_internal_api.h>
+#include <tee_internal_api_extensions.h>
 
 network_TA netta;
 int roundnum = 0;
@@ -99,9 +102,9 @@ void calc_network_loss_TA(int n, int batch)
     if(avg_loss == -1) avg_loss = loss;
     avg_loss = avg_loss*.9 + loss*.1;
 
-    printf("%f, %f avg in TA\n",loss, avg_loss);
+    IMSG("%f, %f avg in TA\n",loss, avg_loss);
     err_sum = 0;
-    free(net_truth);
+    free(netta_truth);
 }
 
 

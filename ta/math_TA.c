@@ -1,5 +1,8 @@
 #include "math_TA.h"
 
+#include <tee_internal_api.h>
+#include <tee_internal_api_extensions.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,17 +44,18 @@ double ta_exp(double x)
     return e1*e2;
 }
 
-/*
- float ta_rand()
- {
- uint32_t digest[3];
- TEE_GenerateRandom(digest,sizeof(digest));
- return (float)((digest[0] + digest[1] + digest[2]) % 10000) / 10000;
- }
- */
 
+float ta_rand()
+{
+    uint32_t digest[3];
+    TEE_GenerateRandom(digest,sizeof(digest));
+    return (float)((digest[0] + digest[1] + digest[2]) % 10000) / 10000;
+}
+
+/*
 #include <time.h>
 #include <stdlib.h>
+
 
 float ta_rand()
 {
@@ -59,7 +63,7 @@ float ta_rand()
     float r = (float)rand()/RAND_MAX;      // Returns a pseudo-random integer between 0 and RAND_MAX.
     return r;
 }
-
+ */
 
 
 int ta_floor(double x)
@@ -147,12 +151,12 @@ int intToStr(int x, char str[], int d)
         str[i++] = (x%10) + '0';
         x = x/10;
     }
-    
+
     // If number of digits required is more, then
     // add 0s at the beginning
     while (i < d)
         str[i++] = '0';
-    
+
     reverse(str, i);
     str[i] = '\0';
     return i;
@@ -163,23 +167,23 @@ void ftoa(float n, char *res, int afterpoint)
 {
     // Extract integer part
     int ipart = (int)n;
-    
+
     // Extract floating part
     float fpart = n - (float)ipart;
-    
+
     // convert integer part to string
     int i = intToStr(ipart, res, 0);
-    
+
     // check for display option after point
     if (afterpoint != 0)
     {
         res[i] = '.';  // add dot
-        
+
         // Get the value of fraction part upto given no.
         // of points after dot. The third parameter is needed
         // to handle cases like 233.007
         fpart = fpart * ta_pow(10, afterpoint);
-        
+
         intToStr((int)fpart, res + i + 1, afterpoint);
     }
 }

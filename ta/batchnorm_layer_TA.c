@@ -2,6 +2,7 @@
 
 #include "batchnorm_layer_TA.h"
 #include "blas_TA.h"
+#include "math_TA.h"
 #include "convolutional_layer_TA.h"
 
 
@@ -12,12 +13,12 @@ void forward_batchnorm_layer_TA(layer_TA l, network_TA net)
     if(net.train){
         mean_cpu_TA(l.output, l.batch, l.out_c, l.out_h*l.out_w, l.mean);
         variance_cpu_TA(l.output, l.mean, l.batch, l.out_c, l.out_h*l.out_w, l.variance);
-        
+
         scal_cpu_TA(l.out_c, .99, l.rolling_mean, 1);
         axpy_cpu_TA(l.out_c, .01, l.mean, 1, l.rolling_mean, 1);
         scal_cpu_TA(l.out_c, .99, l.rolling_variance, 1);
         axpy_cpu_TA(l.out_c, .01, l.variance, 1, l.rolling_variance, 1);
-        
+
         normalize_cpu_TA(l.output, l.mean, l.variance, l.batch, l.out_c, l.out_h*l.out_w);
         copy_cpu_TA(l.outputs*l.batch, l.output, 1, l.x_norm, 1);
     } else {
@@ -44,7 +45,7 @@ void backward_scale_cpu_TA(float *x_norm, float *delta, int batch, int n, int si
 
 void mean_delta_cpu_TA(float *delta, float *variance, int batch, int filters, int spatial, float *mean_delta)
 {
-    
+
     int i,j,k;
     for(i = 0; i < filters; ++i){
         mean_delta[i] = 0;
@@ -61,7 +62,7 @@ void mean_delta_cpu_TA(float *delta, float *variance, int batch, int filters, in
 
 void  variance_delta_cpu_TA(float *x, float *delta, float *mean, float *variance, int batch, int filters, int spatial, float *variance_delta)
 {
-    
+
     int i,j,k;
     for(i = 0; i < filters; ++i){
         variance_delta[i] = 0;
@@ -71,7 +72,7 @@ void  variance_delta_cpu_TA(float *x, float *delta, float *mean, float *variance
                 variance_delta[i] += delta[index]*(x[index] - mean[i]);
             }
         }
-        
+
         variance_delta[i] *= -.5 * ta_pow(variance[i] + .00001f, (float)(-3./2.));
     }
 }
@@ -98,9 +99,9 @@ void backward_batchnorm_layer_TA(layer_TA l, network_TA net)
     }
     backward_bias_TA(l.bias_updates, l.delta, l.batch, l.out_c, l.out_w*l.out_h);
     backward_scale_cpu_TA(l.x_norm, l.delta, l.batch, l.out_c, l.out_w*l.out_h, l.scale_updates);
-    
+
     scale_bias_TA(l.delta, l.scales, l.batch, l.out_c, l.out_h*l.out_w);
-    
+
     mean_delta_cpu_TA(l.delta, l.variance, l.batch, l.out_c, l.out_w*l.out_h, l.mean_delta);
     variance_delta_cpu_TA(l.x, l.delta, l.mean, l.variance, l.batch, l.out_c, l.out_w*l.out_h, l.variance_delta);
     normalize_delta_cpu_TA(l.x, l.mean, l.variance, l.mean_delta, l.variance_delta, l.batch, l.out_c, l.out_w*l.out_h, l.delta);

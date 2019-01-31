@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <tee_internal_api.h>
+#include <tee_internal_api_extensions.h>
+
 COST_TYPE_TA get_cost_type_TA(char *s)
 {
     if (strcmp(s, "seg")==0) return SEG_TA;
@@ -16,7 +19,7 @@ COST_TYPE_TA get_cost_type_TA(char *s)
     if (strcmp(s, "smooth")==0) return SMOOTH_TA;
     if (strcmp(s, "L1")==0) return L1_TA;
     if (strcmp(s, "wgan")==0) return WGAN_TA;
-    fprintf(stderr, "Couldn't find cost type %s, going with SSE\n", s);
+    IMSG("Couldn't find cost type %s, going with SSE\n", s);
     return SSE_TA;
 }
 
@@ -43,10 +46,10 @@ char *get_cost_string_TA(COST_TYPE_TA a)
 
 cost_layer_TA make_cost_layer_TA_new(int batch, int inputs, COST_TYPE_TA cost_type, float scale, float ratio, float noobject_scale, float thresh)
 {
-    fprintf(stderr, "cost_TA                                        %4d\n",  inputs);
+    IMSG("cost_TA                                        %4d\n",  inputs);
     cost_layer_TA l = {0};
     l.type = COST_TA;
-    
+
     l.scale = scale;
     l.batch = batch;
     l.inputs = inputs;
@@ -55,7 +58,7 @@ cost_layer_TA make_cost_layer_TA_new(int batch, int inputs, COST_TYPE_TA cost_ty
     l.delta = calloc(inputs*batch, sizeof(float));
     l.output = calloc(inputs*batch, sizeof(float));
     l.cost = calloc(1, sizeof(float));
-    
+
     l.scale = scale;
     l.ratio = ratio;
     l.noobject_scale = noobject_scale;

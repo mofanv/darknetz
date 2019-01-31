@@ -53,7 +53,7 @@ void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION acti
          res, origin);
 }
 
-void forward_connected_layer_CA(float *net_input, int L_inputs, int net_batch, int net_train)
+void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, int net_train)
 {
     //invoke op and transfer paramters
     TEEC_Operation op;
@@ -210,7 +210,7 @@ void make_softmax_layer_CA(int batch, int inputs, int groups, float temperature,
 
     op.params[0].tmpref.buffer = passint;
     op.params[0].tmpref.size = sizeof(passint);
-    op.params[1].value.a = params1;
+    op.params[1].value.a = passflo;
 
     res = TEEC_InvokeCommand(&sess, MAKE_SOFTMAX_CMD,
                              &op, &origin);
@@ -247,11 +247,11 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
     op.params[0].tmpref.buffer = passint;
     op.params[0].tmpref.size = sizeof(passint);
 
-    op.params[0].tmpref.buffer = passflo;
-    op.params[0].tmpref.size = sizeof(passflo);
+    op.params[1].tmpref.buffer = passflo;
+    op.params[1].tmpref.size = sizeof(passflo);
 
-    op.params[1].tmpref.buffer = passcost;
-    op.params[1].tmpref.size = strlen(passcost);
+    op.params[2].tmpref.buffer = passcost;
+    op.params[2].tmpref.size = strlen(passcost);
 
     res = TEEC_InvokeCommand(&sess, MAKE_COST_CMD,
                              &op, &origin);
@@ -309,7 +309,7 @@ void calc_network_loss_CA(int n, int batch)
         TEEC_NONE, TEEC_NONE);
 
     op.params[0].tmpref.buffer = params0;
-    op.params[0].tmpref.size = sizeof(float)*net_truths*net_batch;
+    op.params[0].tmpref.size = sizeof(params0);
 
     res = TEEC_InvokeCommand(&sess, CALC_LOSS_CMD,
                              &op, &origin);

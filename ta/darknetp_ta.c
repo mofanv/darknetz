@@ -90,7 +90,7 @@ static TEE_Result make_connected_layer_TA_params(uint32_t param_types,
 
     char *acti;
     acti = params[1].memref.buffer;
-    ACTIVATION activation = get_activation_TA(acti);
+    ACTIVATION_TA activation = get_activation_TA(acti);
 
     lta = make_connected_layer_TA_new(batch, inputs, outputs, activation, batch_normalize, adam);
     netta.layers[0] = lta;
@@ -120,7 +120,7 @@ static TEE_Result make_softmax_layer_TA_params(uint32_t param_types,
     int c = params0[5];
     int spatial = params0[6];
     int noloss = params0[7];
-    float temperature = params[1].memref.buffer;
+    float temperature = params[1].value.a;
 
     lta_sm = make_softmax_layer_TA_new(batch, inputs, groups, temperature, w, h, c, spatial, noloss);
     netta.layers[1] = lta_sm;
@@ -145,15 +145,16 @@ static TEE_Result make_cost_layer_TA_params(uint32_t param_types,
     int batch = params0[0];
     int inputs = params0[1];
 
-    float *params0 = params[1].memref.buffer;
+    float *params1 = params[1].memref.buffer;
     float scale = params1[0];
     float ratio = params1[1];
     float noobject_scale = params1[2];
     float thresh = params1[3];
 
-    char* params2 = params[2].memref.buffer;
+    char *cost_t;
+    cost_t = params[2].memref.buffer;
+    ACTIVATION_TA cost_type = get_cost_type_TA(cost_t);
 
-    COST_TYPE_TA cost_type = get_cost_type_TA(params2);
 
     lta_c = make_cost_layer_TA_new(batch, inputs, cost_type, scale, ratio, noobject_scale, thresh);
     netta.layers[2] = lta_c;
@@ -199,10 +200,10 @@ static TEE_Result backward_network_back_TA_params(uint32_t param_types,
     //float *ltadelta_diff = diff_private(lta.delta, lta.outputs*lta.batch, 4.0f, 4.0f);
     //IMSG("diff");
 
-    op.params[0].tmpref.buffer = netta.input;
-    op.params[0].tmpref.size = sizeof(float) * 102400;
-    op.params[1].tmpref.buffer = netta.delta;
-    op.params[1].tmpref.size = sizeof(float) * 102400;
+    params[0].memref.buffer = netta.input;
+    params[0].memref.size = sizeof(float) * 102400;
+    params[1].memref.buffer = netta.delta;
+    params[1].memref.size = sizeof(float) * 102400;
 
     //free(ltaoutput_diff);
     //free(ltadelta_diff);
@@ -286,15 +287,16 @@ static TEE_Result net_truth_TA_params(uint32_t param_types,
     return TEE_ERROR_BAD_PARAMETERS;
 
     netta_truth = malloc(params[0].memref.size);
+    float *params0 = params[0].memref.buffer;
     for(int z=0; z<params[0].memref.size/sizeof(float); z++){
-        netta_truth[z] = params[0].memref.buffer[z];
+        netta_truth[z] = params0[z];
     }
     netta.truth = netta_truth;
 
     return TEE_SUCCESS;
 }
 
-void calc_network_loss_TA_params(uint32_t param_types,
+static TEE_Result calc_network_loss_TA_params(uint32_t param_types,
                                          TEE_Param params[4])
 {
     uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_INPUT,
@@ -307,6 +309,8 @@ void calc_network_loss_TA_params(uint32_t param_types,
     int batch = params0[1];
 
     calc_network_loss_TA(n, batch);
+
+    return TEE_SUCCESS;
 }
 
 
