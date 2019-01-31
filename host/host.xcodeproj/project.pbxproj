@@ -1,0 +1,148 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXFileReference section */
+		D9C53A78220341DB00D7C190 /* .DS_Store */ = {isa = PBXFileReference; lastKnownFileType = file; path = .DS_Store; sourceTree = "<group>"; };
+		D9C53A79220341DB00D7C190 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D9C53A7A220341DB00D7C190 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
+		D9C53A7B220341DB00D7C190 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		D9C53A7C220341DB00D7C190 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D9C53A7D220341DB00D7C190 /* Makefile_changed_bak */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_changed_bak; sourceTree = "<group>"; };
+		D9C53A7E220341DB00D7C190 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		D9C53A72220341DB00D7C190 = {
+			isa = PBXGroup;
+			children = (
+				D9C53A78220341DB00D7C190 /* .DS_Store */,
+				D9C53A79220341DB00D7C190 /* Makefile */,
+				D9C53A7A220341DB00D7C190 /* include */,
+				D9C53A7B220341DB00D7C190 /* main.c */,
+				D9C53A7C220341DB00D7C190 /* examples */,
+				D9C53A7D220341DB00D7C190 /* Makefile_changed_bak */,
+				D9C53A7E220341DB00D7C190 /* src */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		D9C53A77220341DB00D7C190 /* host */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = D9C53A7F220341DB00D7C190 /* Build configuration list for PBXLegacyTarget "host" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = /Users/fanvincentmo/Documents/GitHub/darknetp/darknetp/host;
+			dependencies = (
+			);
+			name = host;
+			passBuildSettingsInEnvironment = 1;
+			productName = host;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		D9C53A73220341DB00D7C190 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = D9C53A76220341DB00D7C190 /* Build configuration list for PBXProject "host" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D9C53A72220341DB00D7C190;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D9C53A77220341DB00D7C190 /* host */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		D9C53A74220341DB00D7C190 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		D9C53A75220341DB00D7C190 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		D9C53A80220341DB00D7C190 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = host;
+			};
+			name = Debug;
+		};
+		D9C53A81220341DB00D7C190 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = host;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D9C53A76220341DB00D7C190 /* Build configuration list for PBXProject "host" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9C53A74220341DB00D7C190 /* Debug */,
+				D9C53A75220341DB00D7C190 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D9C53A7F220341DB00D7C190 /* Build configuration list for PBXLegacyTarget "host" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9C53A80220341DB00D7C190 /* Debug */,
+				D9C53A81220341DB00D7C190 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D9C53A73220341DB00D7C190 /* Project object */;
+}

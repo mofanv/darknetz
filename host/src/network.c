@@ -8,6 +8,10 @@
 #include "utils.h"
 #include "blas.h"
 
+// new in the TA
+#include "main.h"
+// new in the TA
+
 #include "crop_layer.h"
 #include "connected_layer.h"
 #include "gru_layer.h"
@@ -32,7 +36,6 @@
 #include "shortcut_layer.h"
 #include "parser.h"
 #include "data.h"
-#include "main.h"
 
 load_args get_base_args(network *net)
 {
@@ -203,28 +206,17 @@ void forward_network(network *netp)
         net.index = i;
         layer l = net.layers[i];
 
-        if(l.type == CONNECTED & i == 6)
+        if(i > partition_point)
         {
+            forward_connected_layer_CA(net.input, l.inputs, net.batch, net.train);
+            i = net.n;
 
-            // send parameter into TA
-            forward_connected_layer_CA(net.input, l.inputs*l.batch, net.train);\
-
-            net.input = lta_output;
-
-            //if(l_cost){
-            //    net.layers[i].cost[0] = l_cost;
-            //}
-
-            //l.output = lta_output;
-            //l.delta = lta_delta;
-            net.layers[i].output = lta_output;
-            net.layers[i].delta = lta_delta;
         }else
         {
             if(l.delta){
                 fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
             }
-            //printf("i = %d\n",i);
+
             l.forward(l, net);
             net.input = l.output;
             if(l.truth) {
@@ -233,7 +225,7 @@ void forward_network(network *netp)
         }
     }
 
-    calc_network_cost(netp);
+    //calc_network_cost(netp);
 }
 
 
@@ -264,14 +256,14 @@ void update_network(network *netp)
         layer l = net.layers[i];
         if(l.update){
 
-            if(l.type == CONNECTED & i == 6)
+            if(i > partition_point)
             {
                 update_connected_layer_CA(a);
+                i = net.n;
             }else
             {
                 l.update(l, a);
             }
-            // l.update(l, a);
         }
     }
 }
@@ -285,7 +277,7 @@ void calc_network_cost(network *netp)
     for(i = 0; i < net.n; ++i){
         if(net.layers[i].cost){
             sum += net.layers[i].cost[0];
-            printf("i=%d, cost=%f\n",i,net.layers[i].cost[0]);
+            //printf("i=%d, cost=%f\n",i,net.layers[i].cost[0]);
             ++count;
         }
     }
@@ -308,34 +300,58 @@ void backward_network(network *netp)
     network net = *netp;
     int i;
     network orig = net;
+
+    int size_prev = 1024*100;
+    float *ca_prevlayer_input = malloc(sizeof(float) * size_prev);
+    float *ca_prevlayer_delta = malloc(sizeof(float) * size_prev);
+    //float *ca_prevlayer_input;
+    //float *ca_prevlayer_delta;
+
     for(i = net.n-1; i >= 0; --i){
         layer l = net.layers[i];
 
         if(l.stopbackward) break;
         if(i == 0){
             net = orig;
+
+        }else if(i == net.n-1){
+            layer prev = net.layers[partition_point];
+            for(int z=0; z<size_prev; z++){
+                ca_prevlayer_input[z] = prev.output[z];
+                ca_prevlayer_delta[z] = prev.delta[z];
+            }
+            net.input = prev.output;
+            net.delta = prev.delta;
+
         }else{
             layer prev = net.layers[i-1];
             net.input = prev.output;
             net.delta = prev.delta;
+
         }
+
         net.index = i;
 
-        if(l.type == CONNECTED & i == 6)
+        if(i > partition_point)
         {
-            backward_connected_layer_CA(net.input, net.layers[i-1].inputs, net.delta, net.layers[i-1].outputs, net.train);
+
+            backward_connected_layer_CA(ca_prevlayer_input, 1024, net.batch, ca_prevlayer_delta, net.train);
+
             backward_connected_layer_CA_addidion();
-            //l.output = lta_output;
-            //l.delta = lta_delta;
-            net.layers[i].output = lta_output;
-            net.layers[i].delta = lta_delta;
-            
-            net.delta = n_delta;
+
+            for(int z=0; z<size_prev; z++){
+                net.input[z] = net_input[z];
+                net.delta[z] = net_delta[z];
+            }
+
+            i = partition_point + 1;
         }else
         {
             l.backward(l, net);
         }
     }
+    free(ca_prevlayer_input);
+    free(ca_prevlayer_delta);
 }
 
 float train_network_datum(network *net)
@@ -344,8 +360,12 @@ float train_network_datum(network *net)
     net->train = 1;
     forward_network(net);
     backward_network(net);
-    float error = *net->cost;
+
+    //float error = *net->cost;
+    float error = 0;
+
     if(((*net->seen)/net->batch)%net->subdivisions == 0) update_network(net);
+
     return error;
 }
 
@@ -373,9 +393,15 @@ float train_network(network *net, data d)
     float sum = 0;
     for(i = 0; i < n; ++i){
         get_next_batch(d, batch, i*batch, net->input, net->truth);
+
+        // transmit net truth into TA
+        net_truth_CA(net->truth, net->truths, net->batch);
+
         float err = train_network_datum(net);
         sum += err;
     }
+
+    calc_network_loss_CA(n, batch);
     return (float)sum/(n*batch);
 }
 

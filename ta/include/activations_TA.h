@@ -1,20 +1,20 @@
 #ifndef ACTIVATIONS_TA_H
 #define ACTIVATIONS_TA_H
-#include "darknet.h"
-#include "math_ta.h"
+#include "darknet_TA.h"
+#include "math_TA.h"
 #include <stdio.h>
 
-char *get_activation_string_TA(ACTIVATION a);
+char *get_activation_string_TA(ACTIVATION_TA a);
 
-ACTIVATION get_activation_TA(char *s);
+ACTIVATION_TA get_activation_TA(char *s);
 
-float activate_TA(float x, ACTIVATION a);
+float activate_TA(float x, ACTIVATION_TA a);
 
-float*  activate_array_TA(float *x, const int n, const ACTIVATION a);
+float*  activate_array_TA(float *x, const int n, const ACTIVATION_TA a);
 
-float gradient_TA(float x, ACTIVATION a);
+float gradient_TA(float x, ACTIVATION_TA a);
 
-float * gradient_array_TA(const float *x, const int n, const ACTIVATION a, float *delta);
+float * gradient_array_TA(const float *x, const int n, const ACTIVATION_TA a, float *delta);
 
 
 static inline float stair_activate_TA(float x)

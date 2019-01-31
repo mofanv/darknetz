@@ -1,41 +1,39 @@
 #include "activations_TA.h"
 
-#include "math_ta.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-
-char *get_activation_string_TA(ACTIVATION a)
+char *get_activation_string_TA(ACTIVATION_TA a)
 {
     switch(a){
-        case LOGISTIC:
+        case LOGISTIC_TA:
             return "logistic";
-        case LOGGY:
+        case LOGGY_TA:
             return "loggy";
-        case RELU:
+        case RELU_TA:
             return "relu";
-        case ELU:
+        case ELU_TA:
             return "elu";
-        case SELU:
+        case SELU_TA:
             return "selu";
-        case RELIE:
+        case RELIE_TA:
             return "relie";
-        case RAMP:
+        case RAMP_TA:
             return "ramp";
-        case LINEAR:
+        case LINEAR_TA:
             return "linear";
-        case TANH:
+        case TANH_TA:
             return "tanh";
-        case PLSE:
+        case PLSE_TA:
             return "plse";
-        case LEAKY:
+        case LEAKY_TA:
             return "leaky";
-        case STAIR:
+        case STAIR_TA:
             return "stair";
-        case HARDTAN:
+        case HARDTAN_TA:
             return "hardtan";
-        case LHTAN:
+        case LHTAN_TA:
             return "lhtan";
         default:
             break;
@@ -43,63 +41,64 @@ char *get_activation_string_TA(ACTIVATION a)
     return "relu";
 }
 
-ACTIVATION get_activation_TA(char *s)
+ACTIVATION_TA get_activation_TA(char *s)
 {
-    if (strcmp(s, "logistic")==0) return LOGISTIC;
-    if (strcmp(s, "loggy")==0) return LOGGY;
-    if (strcmp(s, "relu")==0) return RELU;
-    if (strcmp(s, "elu")==0) return ELU;
-    if (strcmp(s, "selu")==0) return SELU;
-    if (strcmp(s, "relie")==0) return RELIE;
-    if (strcmp(s, "plse")==0) return PLSE;
-    if (strcmp(s, "hardtan")==0) return HARDTAN;
-    if (strcmp(s, "lhtan")==0) return LHTAN;
-    if (strcmp(s, "linear")==0) return LINEAR;
-    if (strcmp(s, "ramp")==0) return RAMP;
-    if (strcmp(s, "leaky")==0) return LEAKY;
-    if (strcmp(s, "tanh")==0) return TANH;
-    if (strcmp(s, "stair")==0) return STAIR;
+    if (strcmp(s, "logistic")==0) return LOGISTIC_TA;
+    if (strcmp(s, "loggy")==0) return LOGGY_TA;
+    if (strcmp(s, "relu")==0) return RELU_TA;
+    if (strcmp(s, "elu")==0) return ELU_TA;
+    if (strcmp(s, "selu")==0) return SELU_TA;
+    if (strcmp(s, "relie")==0) return RELIE_TA;
+    if (strcmp(s, "plse")==0) return PLSE_TA;
+    if (strcmp(s, "hardtan")==0) return HARDTAN_TA;
+    if (strcmp(s, "lhtan")==0) return LHTAN_TA;
+    if (strcmp(s, "linear")==0) return LINEAR_TA;
+    if (strcmp(s, "ramp")==0) return RAMP_TA;
+    if (strcmp(s, "leaky")==0) return LEAKY_TA;
+    if (strcmp(s, "tanh")==0) return TANH_TA;
+    if (strcmp(s, "stair")==0) return STAIR_TA;
     //fprintf(stderr, "Couldn't find activation function %s, going with ReLU\n", s);
-    return RELU;
+    return RELU_TA;
 }
 
 
-float activate_TA(float x, ACTIVATION a)
+
+float activate_TA(float x, ACTIVATION_TA a)
 {
     switch(a){
-        case LINEAR:
+        case LINEAR_TA:
             return linear_activate_TA(x);
-        case LOGISTIC:
+        case LOGISTIC_TA:
             return logistic_activate_TA(x);
-        case LOGGY:
+        case LOGGY_TA:
             return loggy_activate_TA(x);
-        case RELU:
+        case RELU_TA:
             return relu_activate_TA(x);
-        case ELU:
+        case ELU_TA:
             return elu_activate_TA(x);
-        case SELU:
+        case SELU_TA:
             return selu_activate_TA(x);
-        case RELIE:
+        case RELIE_TA:
             return relie_activate_TA(x);
-        case RAMP:
+        case RAMP_TA:
             return ramp_activate_TA(x);
-        case LEAKY:
+        case LEAKY_TA:
             return leaky_activate_TA(x);
-        case TANH:
+        case TANH_TA:
             return tanh_activate_TA(x);
-        case PLSE:
+        case PLSE_TA:
             return plse_activate_TA(x);
-        case STAIR:
+        case STAIR_TA:
             return stair_activate_TA(x);
-        case HARDTAN:
+        case HARDTAN_TA:
             return hardtan_activate_TA(x);
-        case LHTAN:
+        case LHTAN_TA:
             return lhtan_activate_TA(x);
     }
     return 0;
 }
 
-float*  activate_array_TA(float *x, const int n, const ACTIVATION a)
+float*  activate_array_TA(float *x, const int n, const ACTIVATION_TA a)
 {
     int i;
     for(i = 0; i < n; ++i){
@@ -109,42 +108,42 @@ float*  activate_array_TA(float *x, const int n, const ACTIVATION a)
 }
 
 
-float gradient_TA(float x, ACTIVATION a)
+float gradient_TA(float x, ACTIVATION_TA a)
 {
     switch(a){
-        case LINEAR:
+        case LINEAR_TA:
             return linear_gradient_TA(x);
-        case LOGISTIC:
+        case LOGISTIC_TA:
             return logistic_gradient_TA(x);
-        case LOGGY:
+        case LOGGY_TA:
             return loggy_gradient_TA(x);
-        case RELU:
+        case RELU_TA:
             return relu_gradient_TA(x);
-        case ELU:
+        case ELU_TA:
             return elu_gradient_TA(x);
-        case SELU:
+        case SELU_TA:
             return selu_gradient_TA(x);
-        case RELIE:
+        case RELIE_TA:
             return relie_gradient_TA(x);
-        case RAMP:
+        case RAMP_TA:
             return ramp_gradient_TA(x);
-        case LEAKY:
+        case LEAKY_TA:
             return leaky_gradient_TA(x);
-        case TANH:
+        case TANH_TA:
             return tanh_gradient_TA(x);
-        case PLSE:
+        case PLSE_TA:
             return plse_gradient_TA(x);
-        case STAIR:
+        case STAIR_TA:
             return stair_gradient_TA(x);
-        case HARDTAN:
+        case HARDTAN_TA:
             return hardtan_gradient_TA(x);
-        case LHTAN:
+        case LHTAN_TA:
             return lhtan_gradient_TA(x);
     }
     return 0;
 }
 
-float * gradient_array_TA(const float *x, const int n, const ACTIVATION a, float *delta)
+float * gradient_array_TA(const float *x, const int n, const ACTIVATION_TA a, float *delta)
 {
     int i;
     for(i = 0; i < n; ++i){

@@ -40,7 +40,7 @@ char *get_cost_string(COST_TYPE a)
 
 cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float scale)
 {
-    fprintf(stderr, "cost                                           %4d\n",  inputs);
+    //fprintf(stderr, "cost                                           %4d\n",  inputs);
     cost_layer l = {0};
     l.type = COST;
 

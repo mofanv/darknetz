@@ -1,19 +1,30 @@
 #ifndef BLAS_TA_H
 #define BLAS_TA_H
-#include "darknet.h"
+#include "darknet_TA.h"
 
-float* fill_cpu_TA(int N, float ALPHA, float *X, int INCX);
+void fill_cpu_TA(int N, float ALPHA, float *X, int INCX);
 
-float* copy_cpu_TA(int N, float *X, int INCX, float *Y, int INCY);
+void copy_cpu_TA(int N, float *X, int INCX, float *Y, int INCY);
 
-float* mean_cpu_TA(float *x, int batch, int filters, int spatial, float *mean);
+void mean_cpu_TA(float *x, int batch, int filters, int spatial, float *mean);
 
-float* variance_cpu_TA(float *x, float *mean, int batch, int filters, int spatial, float *variance);
+void variance_cpu_TA(float *x, float *mean, int batch, int filters, int spatial, float *variance);
 
-float* scal_cpu_TA(int N, float ALPHA, float *X, int INCX);
+void scal_cpu_TA(int N, float ALPHA, float *X, int INCX);
 
-float* axpy_cpu_TA(int N, float ALPHA, float *X, int INCX, float *Y, int INCY);
+void axpy_cpu_TA(int N, float ALPHA, float *X, int INCX, float *Y, int INCY);
 
-float* normalize_cpu_TA(float *x, float *mean, float *variance, int batch, int filters, int spatial);
+void normalize_cpu_TA(float *x, float *mean, float *variance, int batch, int filters, int spatial);
 
+void softmax_TA(float *input, int n, float temp, int stride, float *output);
+
+void softmax_cpu_TA(float *input, int n, int batch, int batch_offset, int groups, int group_offset, int stride, float temp, float *output);
+
+void softmax_x_ent_cpu_TA(int n, float *pred, float *truth, float *delta, float *error);
+
+void smooth_l1_cpu_TA(int n, float *pred, float *truth, float *delta, float *error);
+
+void l1_cpu_TA(int n, float *pred, float *truth, float *delta, float *error);
+
+void l2_cpu_TA(int n, float *pred, float *truth, float *delta, float *error);
 #endif

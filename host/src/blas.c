@@ -347,5 +347,3 @@ void upsample_cpu(float *in, int w, int h, int c, int batch, int stride, int for
         }
     }
 }
-
-

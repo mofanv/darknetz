@@ -36,14 +36,17 @@
 #include "softmax_layer.h"
 #include "lstm_layer.h"
 #include "utils.h"
+
 #include "main.h"
+
+
+int count_global = 0;
+int partition_point = 5; // number 5 is the dropout layer
 
 typedef struct{
     char *type;
     list *options;
 }section;
-
-int countlta = 0;
 
 list *read_cfg(char *filename);
 
@@ -270,11 +273,9 @@ layer parse_connected(list *options, size_params params)
     layer l = make_connected_layer(params.batch, params.inputs, output, activation, batch_normalize, params.net->adam);
 
     // send parameters into TA
-    if(countlta==1){
+    if(count_global > partition_point){
         make_connected_layer_CA(params.batch, params.inputs, output, activation, batch_normalize, params.net->adam);
     }
-
-
     return l;
 }
 
@@ -290,6 +291,11 @@ layer parse_softmax(list *options, size_params params)
     l.c = params.c;
     l.spatial = option_find_float_quiet(options, "spatial", 0);
     l.noloss =  option_find_int_quiet(options, "noloss", 0);
+
+    if(count_global > partition_point){
+        make_softmax_layer_CA(params.batch, params.inputs, groups, l.temperature, l.w, l.h, l.c, l.spatial, l.noloss);
+    }
+
     return l;
 }
 
@@ -446,6 +452,11 @@ cost_layer parse_cost(list *options, size_params params)
     layer.ratio =  option_find_float_quiet(options, "ratio",0);
     layer.noobject_scale =  option_find_float_quiet(options, "noobj", 1);
     layer.thresh =  option_find_float_quiet(options, "thresh",0);
+
+    if(count_global > partition_point){
+        make_cost_layer_CA(params.batch, params.inputs, type, scale, layer.ratio, layer.noobject_scale, layer.thresh);
+    }
+
     return layer;
 }
 
@@ -777,6 +788,7 @@ network *parse_network_cfg(char *filename)
     int count = 0;
     free_section(s);
     fprintf(stderr, "layer     filters    size              input                output\n");
+
     while(n){
         params.index = count;
         fprintf(stderr, "%5d ", count);
@@ -784,6 +796,7 @@ network *parse_network_cfg(char *filename)
         options = s->options;
         layer l = {0};
         LAYER_TYPE lt = string_to_layer_type(s->type);
+
         if(lt == CONVOLUTIONAL){
             l = parse_convolutional(options, params);
         }else if(lt == DECONVOLUTIONAL){
@@ -806,7 +819,6 @@ network *parse_network_cfg(char *filename)
             l = parse_crnn(options, params);
         }else if(lt == CONNECTED){
             l = parse_connected(options, params);
-            countlta++;
         }else if(lt == CROP){
             l = parse_crop(options, params);
         }else if(lt == COST){
@@ -840,13 +852,8 @@ network *parse_network_cfg(char *filename)
             l = parse_shortcut(options, params, net);
         }else if(lt == DROPOUT){
             l = parse_dropout(options, params);
-            if(count == 7){
-                l.output = lta_output;
-                l.delta = lta_delta;
-            }else{
-                l.output = net->layers[count-1].output;
-                l.delta = net->layers[count-1].delta;
-            }
+            l.output = net->layers[count-1].output;
+            l.delta = net->layers[count-1].delta;
 
 #ifdef GPU
             l.output_gpu = net->layers[count-1].output_gpu;
@@ -869,11 +876,11 @@ network *parse_network_cfg(char *filename)
 
         net->layers[count] = l;
 
-
         if (l.workspace_size > workspace_size) workspace_size = l.workspace_size;
         free_section(s);
         n = n->next;
         ++count;
+        count_global = count;
 
         if(n){
             params.h = l.out_h;
@@ -908,7 +915,6 @@ network *parse_network_cfg(char *filename)
         net->workspace = calloc(1, workspace_size);
 #endif
     }
-
 
     return net;
 }

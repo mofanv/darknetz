@@ -5,6 +5,7 @@
 #include "cuda.h"
 #include "blas.h"
 #include "gemm.h"
+#include "parser.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -20,7 +21,7 @@ layer make_connected_layer(int batch, int inputs, int outputs, ACTIVATION activa
 
     l.inputs = inputs;
     l.outputs = outputs;
-    l.batch=batch;
+    l.batch = batch;
     l.batch_normalize = batch_normalize;
     l.h = 1;
     l.w = 1;
@@ -125,7 +126,11 @@ layer make_connected_layer(int batch, int inputs, int outputs, ACTIVATION activa
     }
 #endif
     l.activation = activation;
-    fprintf(stderr, "connected                            %4d  ->  %4d\n", inputs, outputs);
+    
+    if(count_global <= partition_point){
+        fprintf(stderr, "connected                            %4d  ->  %4d\n", inputs, outputs);
+    }
+    
     return l;
 }
 
@@ -150,6 +155,7 @@ void update_connected_layer(layer l, update_args a)
 
 void forward_connected_layer(layer l, network net)
 {
+    
     fill_cpu(l.outputs*l.batch, 0, l.output, 1);
     int m = l.batch;
     int k = l.inputs;
@@ -158,6 +164,8 @@ void forward_connected_layer(layer l, network net)
     float *b = l.weights;
     float *c = l.output;
     gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
+    
+
     if(l.batch_normalize){
         forward_batchnorm_layer(l, net);
     } else {

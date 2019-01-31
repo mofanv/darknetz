@@ -40,6 +40,7 @@ void forward_dropout_layer(dropout_layer l, network net)
     int i;
     if (!net.train) return;
     for(i = 0; i < l.batch * l.inputs; ++i){
+        //printf("i = %d; total = %d\n",i, l.batch * l.inputs);
         float r = rand_uniform(0, 1);
         l.rand[i] = r;
         if(r < l.probability) net.input[i] = 0;

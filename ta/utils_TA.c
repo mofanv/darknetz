@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "utils_TA.h"
-#include "math_ta.h"
+#include "math_TA.h"
 
-float sum_array(float *a, int n)
+float sum_array_TA(float *a, int n)
 {
     int i;
     float sum = 0;
@@ -14,14 +14,13 @@ float sum_array(float *a, int n)
     return sum;
 }
 
-float rand_uniform(float min, float max)
+float rand_uniform_TA(float min, float max)
 {
     if(max < min){
         float swap = min;
         min = max;
         max = swap;
     }
-
     return ((float)ta_rand() * (max - min)) + min;
 }
 

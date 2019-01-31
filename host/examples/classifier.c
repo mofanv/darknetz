@@ -3,56 +3,6 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <string.h>
-
-void getMemory() {
-
-    // stores each word in status file
-    char buffer[1024] = "";
-    unsigned long vmsize, vmrss, vmdata, vmstk, vmexe, vmlib;
-    FILE* file = fopen("/proc/self/status", "r");
-
-    // read the entire file
-    if(file){
-        while (fscanf(file, " %1023s", buffer) == 1) {
-            if (strcmp(buffer, "VmSize:") == 0) {
-                fscanf(file, " %d", &vmsize);
-                printf("vmsize:%ld; ", vmsize);
-            }
-            if (strcmp(buffer, "VmRSS:") == 0) {
-                fscanf(file, " %d", &vmrss);
-                printf("vmrss:%ld; ", vmrss);
-            }
-            if (strcmp(buffer, "VmData:") == 0) {
-                fscanf(file, " %d", &vmdata);
-                printf("vmdata:%ld; ", vmdata);
-            }
-            if (strcmp(buffer, "VmStk:") == 0) {
-                fscanf(file, " %d", &vmstk);
-                printf("vmstk:%ld; ", vmstk);
-            }
-            if (strcmp(buffer, "VmExe:") == 0) {
-                fscanf(file, " %d", &vmexe);
-                printf("vmexe:%ld; ", vmexe);
-            }
-            if (strcmp(buffer, "VmLib:") == 0) {
-                fscanf(file, " %d", &vmlib);
-                printf("vmlib:%ld\n", vmlib);
-            }
-        }
-    }else{
-        printf("memory status file not found");
-    }
-
-    fclose(file);
-}
-
-
 float *get_regression_values(char **labels, int n)
 {
     float *v = calloc(n, sizeof(float));
@@ -170,14 +120,6 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
             }
             net = nets[0];
         }
-
-        struct rusage usage;
-        struct timeval startu, endu, starts, ends;
-
-        getrusage(RUSAGE_SELF, &usage);
-        startu = usage.ru_utime;
-        starts = usage.ru_stime;
-
         time = what_time_is_it_now();
 
         pthread_join(load_thread, 0);
@@ -199,17 +141,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 #endif
         if(avg_loss == -1) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
-
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
-
-        getrusage(RUSAGE_SELF, &usage);
-        endu = usage.ru_utime;
-        ends = usage.ru_stime;
-        printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
-        printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
-        printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
-        getMemory();
-
         free_data(train);
         if(*net->seen/N > epoch){
             epoch = *net->seen/N;
@@ -884,7 +816,7 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
     int *indexes = calloc(top, sizeof(int));
 
     if(!cap) error("Couldn't connect to webcam.\n");
-    //cvNamedWindow("Threat", CV_WINDOW_NORMAL);
+    //cvNamedWindow("Threat", CV_WINDOW_NORMAL); 
     //cvResizeWindow("Threat", 512, 512);
     float fps = 0;
     int i;
@@ -913,15 +845,15 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
         float *predictions = network_predict(net, in_s.data);
         float curr_threat = 0;
         if(1){
-            curr_threat = predictions[0] * 0 +
-                predictions[1] * .6 +
+            curr_threat = predictions[0] * 0 + 
+                predictions[1] * .6 + 
                 predictions[2];
         } else {
             curr_threat = predictions[218] +
-                predictions[539] +
-                predictions[540] +
-                predictions[368] +
-                predictions[369] +
+                predictions[539] + 
+                predictions[540] + 
+                predictions[368] + 
+                predictions[369] + 
                 predictions[370];
         }
         threat = roll * curr_threat + (1-roll) * threat;
@@ -929,24 +861,24 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
         draw_box_width(out, x2 + border, y1 + .02*h, x2 + .5 * w, y1 + .02*h + border, border, 0,0,0);
         if(threat > .97) {
             draw_box_width(out,  x2 + .5 * w + border,
-                    y1 + .02*h - 2*border,
-                    x2 + .5 * w + 6*border,
+                    y1 + .02*h - 2*border, 
+                    x2 + .5 * w + 6*border, 
                     y1 + .02*h + 3*border, 3*border, 1,0,0);
         }
         draw_box_width(out,  x2 + .5 * w + border,
-                y1 + .02*h - 2*border,
-                x2 + .5 * w + 6*border,
+                y1 + .02*h - 2*border, 
+                x2 + .5 * w + 6*border, 
                 y1 + .02*h + 3*border, .5*border, 0,0,0);
         draw_box_width(out, x2 + border, y1 + .42*h, x2 + .5 * w, y1 + .42*h + border, border, 0,0,0);
         if(threat > .57) {
             draw_box_width(out,  x2 + .5 * w + border,
-                    y1 + .42*h - 2*border,
-                    x2 + .5 * w + 6*border,
+                    y1 + .42*h - 2*border, 
+                    x2 + .5 * w + 6*border, 
                     y1 + .42*h + 3*border, 3*border, 1,1,0);
         }
         draw_box_width(out,  x2 + .5 * w + border,
-                y1 + .42*h - 2*border,
-                x2 + .5 * w + 6*border,
+                y1 + .42*h - 2*border, 
+                x2 + .5 * w + 6*border, 
                 y1 + .42*h + 3*border, .5*border, 0,0,0);
 
         draw_box_width(out, x1, y1, x2, y2, border, 0,0,0);
@@ -1162,3 +1094,5 @@ void run_classifier(int argc, char **argv)
     else if(0==strcmp(argv[2], "validcrop")) validate_classifier_crop(data, cfg, weights);
     else if(0==strcmp(argv[2], "validfull")) validate_classifier_full(data, cfg, weights);
 }
+
+
