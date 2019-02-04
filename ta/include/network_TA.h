@@ -2,7 +2,8 @@
 #define NETWORK_TA_H
 
 extern network_TA netta;
-extern int roundnum;
+extern float *ta_net_input;
+extern float *ta_net_delta;
 
 void make_network_TA();
 

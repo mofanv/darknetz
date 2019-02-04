@@ -195,15 +195,32 @@ static TEE_Result backward_network_back_TA_params(uint32_t param_types,
                                                TEE_PARAM_TYPE_MEMREF_OUTPUT,
                                                TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE);
-
+    if (param_types != exp_param_types)
+        return TEE_ERROR_BAD_PARAMETERS;
     //float *ltaoutput_diff = diff_private(lta.output, lta.outputs*lta.batch, 4.0f, 4.0f);
     //float *ltadelta_diff = diff_private(lta.delta, lta.outputs*lta.batch, 4.0f, 4.0f);
     //IMSG("diff");
 
-    params[0].memref.buffer = netta.input;
-    params[0].memref.size = sizeof(float) * 102400;
-    params[1].memref.buffer = netta.delta;
-    params[1].memref.size = sizeof(float) * 102400;
+    /*
+    for(int z=0; z<20; z++){
+        char char0[20];
+        ftoa(ta_net_input[z],char0,8);
+        IMSG("z=%d, input=%s \n", z, char0);
+    }
+
+    for(int z=0; z<20; z++){
+        char char0[20];
+        ftoa(ta_net_delta[z],char0,8);
+        IMSG("z=%d, delta=%s \n", z, char0);
+    }
+    */
+
+    float *params0 = params[0].memref.buffer;
+    float *params1 = params[1].memref.buffer;
+    for(int z=0; z<102400; z++){
+        params0[z] = ta_net_input[z];
+        params1[z] = ta_net_delta[z];
+    }
 
     //free(ltaoutput_diff);
     //free(ltadelta_diff);
@@ -269,6 +286,9 @@ static TEE_Result update_connected_layer_TA_params(uint32_t param_types,
 
     update_network_TA(a);
 
+    free(ta_net_input);
+    free(ta_net_delta);
+
     return TEE_SUCCESS;
 }
 
@@ -286,9 +306,11 @@ static TEE_Result net_truth_TA_params(uint32_t param_types,
     if (param_types != exp_param_types)
     return TEE_ERROR_BAD_PARAMETERS;
 
-    netta_truth = malloc(params[0].memref.size);
+    int size_truth = params[0].memref.size;
     float *params0 = params[0].memref.buffer;
-    for(int z=0; z<params[0].memref.size/sizeof(float); z++){
+
+    netta_truth = malloc(size_truth);
+    for(int z=0; z<size_truth/sizeof(float); z++){
         netta_truth[z] = params0[z];
     }
     netta.truth = netta_truth;

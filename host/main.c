@@ -15,8 +15,43 @@
 TEEC_Context ctx;
 TEEC_Session sess;
 
-float *net_input;
-float *net_delta;
+float *net_input_back;
+float *net_delta_back;
+int sysCount = 0;
+
+void debug_plot(char *filename, int num, float *tobeplot, int length)
+{
+    FILE * fp;
+    int i;
+
+    char strnum[10];
+    sprintf(strnum, "%d", num);
+
+    /* open the file for writing*/
+    char *s1 = "debug_plot/";
+    //char *s1 = "";
+    char *s2 = ".txt";
+
+    char *result = malloc(strlen(s1) + strlen(filename) + strlen(s2) + 1); // +1 for the null-terminator
+
+    // in real code you would check for errors in malloc here
+    strcpy(result, s1);
+    strcat(result, filename);
+    strcat(result, strnum);
+    strcat(result, s2);
+
+    fp = fopen(result,"w");
+
+    /* write lines of text into the file stream*/
+    for(i = 0; i < length; i++){
+        fprintf(fp, "%f\n",tobeplot[i]);
+    }
+
+    /* close the file*/
+    fclose (fp);
+    free(result);
+}
+
 
 void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION activation, int batch_normalize, int adam)
 {
@@ -42,7 +77,7 @@ void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION acti
     op.params[0].tmpref.size = sizeof(passarg);
 
     op.params[1].tmpref.buffer = actv;
-    op.params[1].tmpref.size = strlen(actv);
+    op.params[1].tmpref.size = strlen(actv)+1;
 
     res = TEEC_InvokeCommand(&sess, MAKE_CONNECTED_CMD,
                              &op, &origin);
@@ -50,138 +85,6 @@ void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION acti
 
     if (res != TEEC_SUCCESS)
     errx(1, "TEEC_InvokeCommand(MAKE) failed 0x%x origin 0x%x",
-         res, origin);
-}
-
-void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, int net_train)
-{
-    //invoke op and transfer paramters
-    TEEC_Operation op;
-    uint32_t origin;
-    TEEC_Result res;
-    memset(&op, 0, sizeof(op));
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT,
-                                     TEEC_NONE, TEEC_NONE);
-
-     float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
-     for(int z=0; z<l_inputs*net_batch; z++){
-         params0[z] = net_input[z];
-     }
-     int params1 = net_train;
-
-    op.params[0].tmpref.buffer = params0;
-    op.params[0].tmpref.size = sizeof(float) * l_inputs*net_batch;
-    op.params[1].value.a = params1;
-
-    res = TEEC_InvokeCommand(&sess, FORWARD_CMD,
-                             &op, &origin);
-    if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(forward) failed 0x%x origin 0x%x",
-         res, origin);
-
-    free(params0);
-}
-
-void backward_connected_layer_CA_addidion()
-{
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
-
-  net_input = malloc(sizeof(float) * 102400);
-  net_delta = malloc(sizeof(float) * 102400);
-
-  memset(&op, 0, sizeof(op));
-  op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_OUTPUT,
-                                   TEEC_NONE, TEEC_NONE);
-
-   op.params[0].tmpref.buffer = net_input;
-   op.params[0].tmpref.size = sizeof(float) * 102400;
-   op.params[1].tmpref.buffer = net_delta;
-   op.params[1].tmpref.size = sizeof(float) * 102400;
-
-   res = TEEC_InvokeCommand(&sess, BACKWARD_ADD_CMD,
-                            &op, &origin);
-   if (res != TEEC_SUCCESS)
-   errx(1, "TEEC_InvokeCommand(backward_add) failed 0x%x origin 0x%x",
-        res, origin);
-}
-
-
-
-void backward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, float *net_delta, int net_train)
-{
-    //invoke op and transfer paramters
-    TEEC_Operation op;
-    uint32_t origin;
-    TEEC_Result res;
-
-
-    memset(&op, 0, sizeof(op));
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
-                                     TEEC_VALUE_INPUT, TEEC_NONE);
-
-     float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
-     float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
-
-     for(int z=0; z<l_inputs*net_batch; z++){
-         params0[z] = net_input[z];
-         params1[z] = net_delta[z];
-     }
-
-    op.params[0].tmpref.buffer = params0; // as lta.output
-    op.params[0].tmpref.size = sizeof(float)*l_inputs*net_batch;
-    op.params[1].tmpref.buffer = params1; // as n_delta
-    op.params[1].tmpref.size = sizeof(float)*l_inputs*net_batch;
-    op.params[2].value.a = net_train;
-
-    res = TEEC_InvokeCommand(&sess, BACKWARD_CMD,
-                             &op, &origin);
-
-    if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(backward) failed 0x%x origin 0x%x",
-         res, origin);
-
-   free(params0);
-   free(params1);
-}
-
-
-
-void update_connected_layer_CA(update_args a)
-{
-    //invoke op and transfer paramters
-    TEEC_Operation op;
-    uint32_t origin;
-    TEEC_Result res;
-
-    int passint[3];
-    passint[0] = a.batch;
-    passint[1] = a.adam;
-    passint[2] = a.t;
-
-    float passflo[6];
-    passflo[0] = a.learning_rate;
-    passflo[1] = a.momentum;
-    passflo[2] = a.decay;
-    passflo[3] = a.B1;
-    passflo[4] = a.B2;
-    passflo[5] = a.eps;
-
-    memset(&op, 0, sizeof(op));
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
-        TEEC_MEMREF_TEMP_INPUT,
-        TEEC_NONE, TEEC_NONE);
-
-    op.params[0].tmpref.buffer = passint;
-    op.params[0].tmpref.size = sizeof(passint);
-    op.params[1].tmpref.buffer = passflo;
-    op.params[1].tmpref.size = sizeof(passflo);
-
-    res = TEEC_InvokeCommand(&sess, UPDATE_CMD,
-                             &op, &origin);
-    if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
          res, origin);
 }
 
@@ -251,7 +154,7 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
     op.params[1].tmpref.size = sizeof(passflo);
 
     op.params[2].tmpref.buffer = passcost;
-    op.params[2].tmpref.size = strlen(passcost);
+    op.params[2].tmpref.size = strlen(passcost)+1;
 
     res = TEEC_InvokeCommand(&sess, MAKE_COST_CMD,
                              &op, &origin);
@@ -259,6 +162,162 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
     errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
          res, origin);
 }
+
+
+void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, int net_train)
+{
+    //invoke op and transfer paramters
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT,
+                                     TEEC_NONE, TEEC_NONE);
+
+     float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
+     for(int z=0; z<l_inputs*net_batch; z++){
+         params0[z] = net_input[z];
+     }
+     int params1 = net_train;
+
+    op.params[0].tmpref.buffer = params0;
+    op.params[0].tmpref.size = sizeof(float) * l_inputs*net_batch;
+    op.params[1].value.a = params1;
+
+    /////////  debug_plot  /////////
+    debug_plot("forward_net_input_", sysCount, params0, l_inputs*net_batch);
+
+    res = TEEC_InvokeCommand(&sess, FORWARD_CMD,
+                             &op, &origin);
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(forward) failed 0x%x origin 0x%x",
+         res, origin);
+
+    free(params0);
+}
+
+void backward_connected_layer_CA_addidion()
+{
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+  net_input_back = malloc(sizeof(float) * 102400);
+  net_delta_back = malloc(sizeof(float) * 102400);
+
+
+  /////////  debug_plot  /////////
+  debug_plot("backward_net_input_back1_", sysCount, net_input_back, 102400);
+  debug_plot("backward_net_delta_back1_", sysCount, net_delta_back, 102400);
+
+
+  memset(&op, 0, sizeof(op));
+  op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_OUTPUT,
+                                   TEEC_NONE, TEEC_NONE);
+
+
+
+   op.params[0].tmpref.buffer = net_input_back;
+   op.params[0].tmpref.size = sizeof(float) * 102400;
+   op.params[1].tmpref.buffer = net_delta_back;
+   op.params[1].tmpref.size = sizeof(float) * 102400;
+
+   res = TEEC_InvokeCommand(&sess, BACKWARD_ADD_CMD,
+                            &op, &origin);
+
+    /////////  debug_plot  /////////
+    debug_plot("backward_net_input_back2_", sysCount, net_input_back, 102400);
+    debug_plot("backward_net_delta_back2_", sysCount, net_delta_back, 102400);
+
+
+   if (res != TEEC_SUCCESS)
+   errx(1, "TEEC_InvokeCommand(backward_add) failed 0x%x origin 0x%x",
+        res, origin);
+}
+
+
+
+void backward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, float *net_delta, int net_train)
+{
+    //invoke op and transfer paramters
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
+                                     TEEC_VALUE_INPUT, TEEC_NONE);
+
+     float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
+     float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
+
+     for(int z=0; z<l_inputs*net_batch; z++){
+         params0[z] = net_input[z];
+         params1[z] = net_delta[z];
+     }
+
+    op.params[0].tmpref.buffer = params0; // as lta.output
+    op.params[0].tmpref.size = sizeof(float)*l_inputs*net_batch;
+    op.params[1].tmpref.buffer = params1; // as n_delta
+    op.params[1].tmpref.size = sizeof(float)*l_inputs*net_batch;
+    op.params[2].value.a = net_train;
+
+    res = TEEC_InvokeCommand(&sess, BACKWARD_CMD,
+                             &op, &origin);
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(backward) failed 0x%x origin 0x%x",
+         res, origin);
+
+     /////////  debug_plot  /////////
+    debug_plot("backward_net_input_", sysCount, params0, l_inputs*net_batch);
+     debug_plot("backward_net_delta_", sysCount, params1, l_inputs*net_batch);
+
+   free(params0);
+   free(params1);
+}
+
+
+
+void update_connected_layer_CA(update_args a)
+{
+    //invoke op and transfer paramters
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+
+    int passint[3];
+    passint[0] = a.batch;
+    passint[1] = a.adam;
+    passint[2] = a.t;
+
+    float passflo[6];
+    passflo[0] = a.learning_rate;
+    passflo[1] = a.momentum;
+    passflo[2] = a.decay;
+    passflo[3] = a.B1;
+    passflo[4] = a.B2;
+    passflo[5] = a.eps;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
+        TEEC_MEMREF_TEMP_INPUT,
+        TEEC_NONE, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+    op.params[1].tmpref.buffer = passflo;
+    op.params[1].tmpref.size = sizeof(passflo);
+
+    res = TEEC_InvokeCommand(&sess, UPDATE_CMD,
+                             &op, &origin);
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
 
 
 void net_truth_CA(float *net_truth, int net_truths, int net_batch)
@@ -289,11 +348,15 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch)
     errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
          res, origin);
 
+     /////////  debug_plot  /////////
+     debug_plot("backward_net_truth_", sysCount, params0, net_truths*net_batch);
+
     free(params0);
 }
 
 void calc_network_loss_CA(int n, int batch)
 {
+    sysCount++;
     //invoke op and transfer paramters
     TEEC_Operation op;
     uint32_t origin;

@@ -334,15 +334,16 @@ void backward_network(network *netp)
 
         if(i > partition_point)
         {
-
             backward_connected_layer_CA(ca_prevlayer_input, 1024, net.batch, ca_prevlayer_delta, net.train);
 
             backward_connected_layer_CA_addidion();
 
             for(int z=0; z<size_prev; z++){
-                net.input[z] = net_input[z];
-                net.delta[z] = net_delta[z];
+                net.input[z] = net_input_back[z];
+                net.delta[z] = net_delta_back[z];
             }
+            free(net_input_back);
+            free(net_delta_back);
 
             i = partition_point + 1;
         }else

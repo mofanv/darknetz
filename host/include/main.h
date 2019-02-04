@@ -25,8 +25,8 @@
 extern TEEC_Context ctx;
 extern TEEC_Session sess;
 
-extern float *net_input;
-extern float *net_delta;
+extern float *net_input_back;
+extern float *net_delta_back;
 
 
 void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION activation, int batch_normalize, int adam);

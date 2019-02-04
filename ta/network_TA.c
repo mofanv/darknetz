@@ -5,6 +5,7 @@
 #include "darknet_TA.h"
 #include "blas_TA.h"
 #include "network_TA.h"
+#include "math_TA.h"
 
 #include "darknetp_ta.h"
 
@@ -12,9 +13,10 @@
 #include <tee_internal_api_extensions.h>
 
 network_TA netta;
-int roundnum = 0;
 float err_sum = 0;
 float avg_loss = -1;
+float *ta_net_input;
+float *ta_net_delta;
 
 void make_network_TA()
 {
@@ -44,7 +46,6 @@ void make_network_TA()
 
 void forward_network_TA()
 {
-    roundnum++;
     int i;
     for(i = 0; i < netta.n; ++i){
         netta.index = i;
@@ -76,6 +77,7 @@ void update_network_TA(update_args_TA a)
             l.update_TA(l, a);
         }
     }
+    free(netta_truth);
 }
 
 
@@ -102,9 +104,12 @@ void calc_network_loss_TA(int n, int batch)
     if(avg_loss == -1) avg_loss = loss;
     avg_loss = avg_loss*.9 + loss*.1;
 
-    IMSG("%f, %f avg in TA\n",loss, avg_loss);
+    char loss_char[20];
+    char avg_loss_char[20];
+    ftoa(loss, loss_char, 5);
+    ftoa(avg_loss, avg_loss_char, 5);
+    IMSG("loss = %s, avg loss = %s from the TA\n",loss_char, avg_loss_char);
     err_sum = 0;
-    free(netta_truth);
 }
 
 
@@ -117,8 +122,17 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
 
         if(l.stopbackward) break;
         if(i == 0){
-            netta.input = ca_net_input;
-            netta.delta = ca_net_delta;
+            // ta_net_input malloc so not destroy before addition backward
+            ta_net_input = malloc(sizeof(float)*l.inputs*l.batch);
+            ta_net_delta = malloc(sizeof(float)*l.inputs*l.batch);
+
+            for(int z=0; z<l.inputs*l.batch; z++){
+                ta_net_input[z] = ca_net_input[z];
+                ta_net_delta[z] = ca_net_delta[z];
+            }
+
+            netta.input = ta_net_input;
+            netta.delta = ta_net_delta;
         }else{
             layer_TA prev = netta.layers[i-1];
             netta.input = prev.output;
