@@ -2,6 +2,54 @@
 
 #include <sys/time.h>
 #include <assert.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
+
+void getMemory() {
+    
+    // stores each word in status file
+    char buffer[1024] = "";
+    unsigned long vmsize, vmrss, vmdata, vmstk, vmexe, vmlib;
+    FILE* file = fopen("/proc/self/status", "r");
+    
+    // read the entire file
+    if(file){
+        while (fscanf(file, " %1023s", buffer) == 1) {
+            if (strcmp(buffer, "VmSize:") == 0) {
+                fscanf(file, " %d", &vmsize);
+                printf("vmsize:%ld; ", vmsize);
+            }
+            if (strcmp(buffer, "VmRSS:") == 0) {
+                fscanf(file, " %d", &vmrss);
+                printf("vmrss:%ld; ", vmrss);
+            }
+            if (strcmp(buffer, "VmData:") == 0) {
+                fscanf(file, " %d", &vmdata);
+                printf("vmdata:%ld; ", vmdata);
+            }
+            if (strcmp(buffer, "VmStk:") == 0) {
+                fscanf(file, " %d", &vmstk);
+                printf("vmstk:%ld; ", vmstk);
+            }
+            if (strcmp(buffer, "VmExe:") == 0) {
+                fscanf(file, " %d", &vmexe);
+                printf("vmexe:%ld; ", vmexe);
+            }
+            if (strcmp(buffer, "VmLib:") == 0) {
+                fscanf(file, " %d", &vmlib);
+                printf("vmlib:%ld\n", vmlib);
+            }
+        }
+    }else{
+        printf("memory status file not found");
+    }
+    
+    fclose(file);
+}
 
 float *get_regression_values(char **labels, int n)
 {
@@ -120,6 +168,14 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
             }
             net = nets[0];
         }
+        
+        struct rusage usage;
+        struct timeval startu, endu, starts, ends;
+        
+        getrusage(RUSAGE_SELF, &usage);
+        startu = usage.ru_utime;
+        starts = usage.ru_stime;
+        
         time = what_time_is_it_now();
 
         pthread_join(load_thread, 0);
@@ -142,6 +198,15 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         if(avg_loss == -1) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
+        
+        getrusage(RUSAGE_SELF, &usage);
+        endu = usage.ru_utime;
+        ends = usage.ru_stime;
+        printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
+        printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
+        printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
+        getMemory();
+        
         free_data(train);
         if(*net->seen/N > epoch){
             epoch = *net->seen/N;
