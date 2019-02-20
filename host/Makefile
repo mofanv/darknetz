@@ -6,9 +6,8 @@ OBJCOPY ?= $(CROSS_COMPILE)objcopy
 OBJDUMP ?= $(CROSS_COMPILE)objdump
 READELF ?= $(CROSS_COMPILE)readelf
 
-ALIB=libdarknet.a
-AR =ar
-ARFLAGS=rcs
+#ALIB=libdarknet.a
+#ARFLAGS = -rcs
 LDFLAGS= -lm -pthread
 
 OBJSCR = src/
@@ -23,23 +22,25 @@ EXECOBJS = $(addprefix $(EXECSCR), $(EXECOBJ))
 
 EXECMAIN = main.o
 
-CFLAGS += -Wall -I$(TEEC_EXPORT)/include -I./include
+CFLAGS += -Wall -I../ta/include -I$(TEEC_EXPORT)/include -I./include
 CFLAGS += -Iinclude/ -Isrc/ -Iexamples/  -I./src/ -I./examples/
 
 #Add/link other required libraries here
 LDADD += -lteec -L$(TEEC_EXPORT)/lib
-DEPS = $(wildcard src/*.h) inlcude/darknet.h inlcude/main.h
+#DEPS = $(wildcard src/*.h) inlcude/darknet.h inlcude/main.h
 
 BINARY = optee_example_darknetp
 
 .PHONY: all
-all: $(ALIB) $(BINARY)
+#all: $(ALIB) $(BINARY)
+all: $(BINARY)
 
-$(BINARY): $(EXECMAIN) $(EXECOBJS) $(ALIB)
-	$(CC) $(CFLAGS) -g $^ -o $@ $(LDFLAGS) $(LDADD)
+$(BINARY): $(EXECMAIN) $(EXECOBJS) $(OBJS)
+	#$(CC) $(CFLAGS) -g $^ -o $@ $(LDFLAGS) $(LDADD) $(ALIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LDADD)
 
-$(ALIB): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+#$(ALIB): $(OBJS)
+#	$(AR) $(ARFLAGS) $@ $^
 
 $(OBJSCR)%.o: $(OBJSCR)%.c
 		$(CC) $(CFLAGS) -c $< -o $@
