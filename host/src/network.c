@@ -190,6 +190,38 @@ network *make_network(int n)
     return net;
 }
 
+int workspaceBOO(network net)
+{
+   int untrusted_has_conv = 0;
+   int trusted_has_conv = 0;
+   int workspace_size = 0;
+   for(int i = 0; i < net.n; ++i)
+   {
+        if(CONVOLUTIONAL == net.layers[i].type)
+        {
+            layer l = net.layers[i];
+            if(l.workspace_size > workspace_size){
+                  workspace_size = l.workspace_size;
+            }
+
+            if(partition_point < i){
+                  untrusted_has_conv = 1;
+            }
+
+            if(partition_point >= i){
+                  trusted_has_conv = 1;
+            }
+        }
+   }
+
+   if(untrusted_has_conv & trusted_has_conv)
+   {
+          return workspace_size;
+   }
+   return 0;
+}
+
+int wssize = -1;
 
 void forward_network(network *netp)
 {
@@ -208,7 +240,7 @@ void forward_network(network *netp)
 
         if(i > partition_point)
         {
-            forward_connected_layer_CA(net.input, l.inputs, net.batch, net.train);
+            forward_network_CA(net.input, l.inputs, net.batch, net.train);
             i = net.n;
 
         }else
@@ -222,10 +254,16 @@ void forward_network(network *netp)
             if(l.truth) {
                 net.truth = l.output;
             }
+
+            if(wssize == -1)  {
+              wssize = workspaceBOO(net);
+              if(wssize) update_net_agrv_CA_allocateSM(wssize, net.workspace);
+            }
+            if(wssize)  update_net_agrv_CA(0, wssize, net.workspace);
         }
     }
 
-    //calc_network_cost(netp);
+    calc_network_cost(netp);
 }
 
 
@@ -258,7 +296,7 @@ void update_network(network *netp)
 
             if(i > partition_point)
             {
-                update_connected_layer_CA(a);
+                update_network_CA(a);
                 i = net.n;
             }else
             {
@@ -301,11 +339,9 @@ void backward_network(network *netp)
     int i;
     network orig = net;
 
-    int size_prev = 1024*100;
+    int size_prev = net.layers[partition_point].outputs * net.batch;
     float *ca_prevlayer_input = malloc(sizeof(float) * size_prev);
     float *ca_prevlayer_delta = malloc(sizeof(float) * size_prev);
-    //float *ca_prevlayer_input;
-    //float *ca_prevlayer_delta;
 
     for(i = net.n-1; i >= 0; --i){
         layer l = net.layers[i];
@@ -327,16 +363,16 @@ void backward_network(network *netp)
             layer prev = net.layers[i-1];
             net.input = prev.output;
             net.delta = prev.delta;
-
         }
 
         net.index = i;
 
         if(i > partition_point)
         {
-            backward_connected_layer_CA(ca_prevlayer_input, 1024, net.batch, ca_prevlayer_delta, net.train);
 
-            backward_connected_layer_CA_addidion();
+            backward_network_CA(ca_prevlayer_input, net.layers[partition_point].outputs, net.batch, ca_prevlayer_delta, net.train);
+
+            backward_network_CA_addidion(net.layers[partition_point].outputs, net.batch);
 
             for(int z=0; z<size_prev; z++){
                 net.input[z] = net_input_back[z];
@@ -344,6 +380,8 @@ void backward_network(network *netp)
             }
             free(net_input_back);
             free(net_delta_back);
+
+            if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
 
             i = partition_point + 1;
         }else
@@ -362,8 +400,8 @@ float train_network_datum(network *net)
     forward_network(net);
     backward_network(net);
 
-    //float error = *net->cost;
-    float error = 0;
+    float error = *net->cost;
+    //float error = 0;
 
     if(((*net->seen)/net->batch)%net->subdivisions == 0) update_network(net);
 

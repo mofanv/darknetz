@@ -22,7 +22,6 @@ void gemm_nn_TA(int M, int N, int K, float ALPHA,
              float *C, int ldc)
 {
     int i,j,k;
-#pragma omp parallel for
     for(i = 0; i < M; ++i){
         for(k = 0; k < K; ++k){
             register float A_PART = ALPHA*A[i*lda+k];
@@ -47,7 +46,6 @@ void gemm_nt_TA(int M, int N, int K, float ALPHA,
     //printf("stoping");
 
     int i,j,k;
-#pragma omp parallel for
     for(i = 0; i < M; ++i){
         for(j = 0; j < N; ++j){
             register float sum = 0;
@@ -75,7 +73,6 @@ void gemm_tn_TA(int M, int N, int K, float ALPHA,
              float *C, int ldc)
 {
     int i,j,k;
-#pragma omp parallel for
     for(i = 0; i < M; ++i){
         for(k = 0; k < K; ++k){
             register float A_PART = ALPHA*A[k*lda+i];
@@ -93,7 +90,6 @@ void gemm_tt_TA(int M, int N, int K, float ALPHA,
              float *C, int ldc)
 {
     int i,j,k;
-#pragma omp parallel for
     for(i = 0; i < M; ++i){
         for(j = 0; j < N; ++j){
             register float sum = 0;

@@ -8,44 +8,63 @@
 #include "math_TA.h"
 
 #include "darknetp_ta.h"
-
 #include <tee_internal_api.h>
 #include <tee_internal_api_extensions.h>
 
 network_TA netta;
+int roundnum = 0;
 float err_sum = 0;
 float avg_loss = -1;
+
 float *ta_net_input;
 float *ta_net_delta;
 
-void make_network_TA()
+void make_network_TA(int n, float learning_rate, float momentum, float decay, int time_steps, int notruth, int batch, int subdivisions, int random, int adam, float B1, float B2, float eps, int h, int w, int c, int inputs, int max_crop, int min_crop, float max_ratio, float min_ratio, int center, float clip, float angle, float aspect, float saturation, float exposure, float hue, int burn_in, float power, int max_batches)
 {
-    netta.n = 3;
+    netta.n = n;
+
     netta.seen = calloc(1, sizeof(size_t));
     netta.layers = calloc(netta.n, sizeof(layer_TA));
     netta.t    = calloc(1, sizeof(int));
     netta.cost = calloc(1, sizeof(float));
-    netta.batch = 100;
-    netta.subdivisions = 1;
-    netta.burn_in = 0;
-    netta.learning_rate = 0.01;
-    netta.power = 4;
-    netta.policy = POLY_TA;
-    netta.scale = 1;
-    netta.max_batches = 500;
-    netta.momentum = 0.9;
-    netta.decay = 0.00005;
-    netta.adam = 0;
-    netta.B1 = 0.9;
-    netta.B2 = 0.999;
-    netta.eps = 0.0000001;
+
+    netta.learning_rate = learning_rate;
+    netta.momentum = momentum;
+    netta.decay = decay;
+    netta.time_steps = time_steps;
+    netta.notruth = notruth;
+    netta.batch = batch;
+    netta.subdivisions = subdivisions;
+    netta.random = random;
+    netta.adam = adam;
+    netta.B1 = B1;
+    netta.B2 = B2;
+    netta.eps = eps;
+    netta.h = h;
+    netta.w = w;
+    netta.c = c;
+    netta.inputs = inputs;
+    netta.max_crop = max_crop;
+    netta.min_crop = min_crop;
+    netta.max_ratio = max_ratio;
+    netta.min_ratio = min_ratio;
+    netta.center = center;
+    netta.clip = clip;
+    netta.angle = angle;
+    netta.aspect = aspect;
+    netta.saturation = saturation;
+    netta.exposure = exposure;
+    netta.hue = hue;
+    netta.burn_in = burn_in;
+    netta.power = power;
+    netta.max_batches = max_batches;
 
     //netta.truth = net->truth; ////// ing network.c train_network
 }
 
-
 void forward_network_TA()
 {
+    roundnum++;
     int i;
     for(i = 0; i < netta.n; ++i){
         netta.index = i;
@@ -56,12 +75,12 @@ void forward_network_TA()
         }
 
         l.forward_TA(l, netta);
+
         netta.input = l.output;
 
         if(l.truth) {
             netta.truth = l.output;
         }
-
     }
 
     calc_network_cost_TA();
@@ -77,7 +96,6 @@ void update_network_TA(update_args_TA a)
             l.update_TA(l, a);
         }
     }
-    free(netta_truth);
 }
 
 
@@ -113,6 +131,7 @@ void calc_network_loss_TA(int n, int batch)
 }
 
 
+
 void backward_network_TA(float *ca_net_input, float *ca_net_delta)
 {
     int i;
@@ -141,7 +160,15 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
 
         netta.index = i;
         l.backward_TA(l, netta);
-    }
 
+        if(l.type == DROPOUT_TA){
+            for(int z=0; z<l.inputs*l.batch; z++){
+                ta_net_input[z] = l.output[z];
+                ta_net_delta[z] = l.delta[z];
+            }
+            //netta.input = l.output;
+            //netta.delta = l.delta;
+        }
+    }
     //backward_network_back_TA_params(netta.input, netta.delta, netta.layers[0].inputs, netta.batch);
 }

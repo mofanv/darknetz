@@ -6,6 +6,7 @@
 #define e  2.7182818284590452354
 #define ln_2 0.69314718055994530942
 #define ln_10 2.30258509299404568402
+#define first_aim_money 1000000000.0f
 
 #define fabs(a) ((a)>0?(a):(-(a)))
 
@@ -17,6 +18,9 @@ int ta_floor(double x);
 double ta_sqrt(double x);
 double ta_ln(double x);
 double ta_log(double a,double N);
+double ta_sin(double x);
+double ta_cos(double x);
+double ta_tan(double x);
 
 void reverse(char *str, int len);
 int intToStr(int x, char str[], int d);
