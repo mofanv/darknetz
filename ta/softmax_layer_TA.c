@@ -11,6 +11,7 @@
 #include <tee_internal_api.h>
 #include <tee_internal_api_extensions.h>
 
+
 softmax_layer_TA make_softmax_layer_TA_new(int batch, int inputs, int groups, float temperature, int w, int h, int c, int spatial, int noloss)
 {
     assert(inputs%groups == 0);

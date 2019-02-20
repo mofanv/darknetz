@@ -14,6 +14,7 @@
 /* TEE resources */
 TEEC_Context ctx;
 TEEC_Session sess;
+TEEC_SharedMemory workspaceSM;
 
 float *net_input_back;
 float *net_delta_back;
@@ -52,6 +53,239 @@ void debug_plot(char *filename, int num, float *tobeplot, int length)
     free(result);
 }
 
+void make_network_CA(int n, float learning_rate, float momentum, float decay, int time_steps, int notruth, int batch, int subdivisions, int random, int adam, float B1, float B2, float eps, int h, int w, int c, int inputs, int max_crop, int min_crop, float max_ratio, float min_ratio, int center, float clip, float angle, float aspect, float saturation, float exposure, float hue, int burn_in, float power, int max_batches)
+{
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+    int passint[17];
+    passint[0] = n;
+    passint[1] = time_steps;
+    passint[2] = notruth;
+    passint[3] = batch;
+    passint[4] = subdivisions;
+    passint[5] = random;
+    passint[6] = adam;
+    passint[7] = h;
+    passint[8] = w;
+    passint[9] = c;
+    passint[10] = inputs;
+    passint[11] = max_crop;
+    passint[12] = min_crop;
+    passint[13] = center;
+    passint[14] = burn_in;
+    passint[15] = max_batches;
+
+    float passfloat[15];
+    passfloat[0] = learning_rate;
+    passfloat[1] = momentum;
+    passfloat[2] = decay;
+    passfloat[3] = B1;
+    passfloat[4] = B2;
+    passfloat[5] = eps;
+    passfloat[6] = max_ratio;
+    passfloat[7] = min_ratio;
+    passfloat[8] = clip;
+    passfloat[9] = angle;
+    passfloat[10] = aspect;
+    passfloat[11] = saturation;
+    passfloat[12] = exposure;
+    passfloat[13] = hue;
+    passfloat[14] = power;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
+                                     TEEC_NONE, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+
+    op.params[1].tmpref.buffer = passfloat;
+    op.params[1].tmpref.size = sizeof(passfloat);
+
+    res = TEEC_InvokeCommand(&sess, MAKE_NETWORK_CMD,
+                             &op, &origin);
+
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(MAKE_NET) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
+void update_net_agrv_CA_allocateSM(int workspace_size, float *workspace)
+{
+    uint32_t origin;
+    TEEC_Result res;
+    workspaceSM.size  = sizeof(float) * workspace_size;
+    workspaceSM.flags = TEEC_MEM_INPUT | TEEC_MEM_OUTPUT;
+
+    res = TEEC_AllocateSharedMemory(
+                     &ctx,
+                     &workspaceSM);
+     if (res != TEEC_SUCCESS)
+     errx(1, "TEEC_InvokeCommand(UPDATE_NET_ASM) failed 0x%x origin 0x%x", res, origin);
+}
+
+void update_net_agrv_CA(int cond, int workspace_size, float *workspace)
+{
+    // forward condition
+    if(cond == 0)
+    {
+        TEEC_Operation op;
+        uint32_t origin;
+        TEEC_Result res;
+
+        workspaceSM.buffer = workspace;
+
+        memset(&op, 0, sizeof(op));
+        op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INPUT, TEEC_MEMREF_PARTIAL_INPUT,
+                                         TEEC_NONE, TEEC_NONE);
+
+        op.params[0].value.a = cond;
+        op.params[1].memref.parent = &workspaceSM;
+        op.params[1].memref.offset = 0;
+        op.params[1].memref.size   = sizeof(float) * workspace_size;
+
+        res = TEEC_InvokeCommand(&sess, WORKSPACE_NETWORK_CMD,
+                                 &op, &origin);
+
+         if (res != TEEC_SUCCESS)
+         errx(1, "TEEC_InvokeCommand(UPDATE_NET) failed 0x%x origin 0x%x",
+              res, origin);
+    }
+
+    // backward condition
+    if(cond == 1){
+        float *wsbuffer = workspaceSM.buffer;
+        for(int z=0; z<workspace_size; z++){
+              workspace[z] = wsbuffer[z];
+        }
+    }
+}
+
+
+void make_convolutional_layer_CA(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam, int flipped, float dot)
+{
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+    int passint[14];
+    passint[0] = batch;
+    passint[1] = h;
+    passint[2] = w;
+    passint[3] = c;
+    passint[4] = n;
+    passint[5] = groups;
+    passint[6] = size;
+    passint[7] = stride;
+    passint[8] = padding;
+    passint[9] = batch_normalize;
+    passint[10] = binary;
+    passint[11] = xnor;
+    passint[12] = adam;
+    passint[13] = flipped;
+
+    float passflo = dot;
+    char *acti = get_activation_string(activation);
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT,
+                                     TEEC_MEMREF_TEMP_INPUT, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+
+    op.params[1].value.a = passflo;
+
+    op.params[2].tmpref.buffer = acti;
+    op.params[2].tmpref.size = strlen(acti)+1;
+
+    res = TEEC_InvokeCommand(&sess, MAKE_CONV_CMD,
+                             &op, &origin);
+
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(CONV) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
+void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding)
+{
+  //invoke op and transfer paramters
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+    int passint[7];
+    passint[0] = batch;
+    passint[1] = h;
+    passint[2] = w;
+    passint[3] = c;
+    passint[4] = size;
+    passint[5] = stride;
+    passint[6] = padding;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_NONE,
+                                     TEEC_NONE, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+
+    res = TEEC_InvokeCommand(&sess, MAKE_MAX_CMD,
+                             &op, &origin);
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(MAX) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
+void make_dropout_layer_CA(int batch, int inputs, float probability, int w, int h, int c, float *net_prev_output, float *net_prev_delta)
+{
+  //invoke op and transfer paramters
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+    int passint[5];
+    passint[0] = batch;
+    passint[1] = inputs;
+    passint[2] = w;
+    passint[3] = h;
+    passint[4] = c;
+    float passflo[1];
+    passflo[0] = probability;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
+                                     TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+    op.params[1].tmpref.buffer = passflo;
+    op.params[1].tmpref.size = sizeof(float)*1;
+
+////////////////////////
+    //debug_plot("net_prev_output", sysCount, net_prev_output, inputs*batch);
+    //debug_plot("net_prev_delta", sysCount, net_prev_delta, inputs*batch);
+
+    op.params[2].tmpref.buffer = net_prev_output;
+    op.params[2].tmpref.size = sizeof(float)*inputs*batch;
+    op.params[3].tmpref.buffer = net_prev_delta;
+    op.params[3].tmpref.size = sizeof(float)*inputs*batch;
+////////////////////////
+
+    res = TEEC_InvokeCommand(&sess, MAKE_DROP_CMD,
+                             &op, &origin);
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(DROP) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
+
 
 void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION activation, int batch_normalize, int adam)
 {
@@ -84,7 +318,7 @@ void make_connected_layer_CA(int batch, int inputs, int outputs, ACTIVATION acti
 
 
     if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(MAKE) failed 0x%x origin 0x%x",
+    errx(1, "TEEC_InvokeCommand(FC) failed 0x%x origin 0x%x",
          res, origin);
 }
 
@@ -118,7 +352,7 @@ void make_softmax_layer_CA(int batch, int inputs, int groups, float temperature,
     res = TEEC_InvokeCommand(&sess, MAKE_SOFTMAX_CMD,
                              &op, &origin);
     if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
+    errx(1, "TEEC_InvokeCommand(SOFTMAX) failed 0x%x origin 0x%x",
          res, origin);
 }
 
@@ -159,12 +393,12 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
     res = TEEC_InvokeCommand(&sess, MAKE_COST_CMD,
                              &op, &origin);
     if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
+    errx(1, "TEEC_InvokeCommand(COST) failed 0x%x origin 0x%x",
          res, origin);
 }
 
 
-void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, int net_train)
+void forward_network_CA(float *net_input, int l_inputs, int net_batch, int net_train)
 {
     //invoke op and transfer paramters
     TEEC_Operation op;
@@ -186,7 +420,7 @@ void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, i
     op.params[1].value.a = params1;
 
     /////////  debug_plot  /////////
-    debug_plot("forward_net_input_", sysCount, params0, l_inputs*net_batch);
+    //debug_plot("forward_net_input_", sysCount, params0, l_inputs*net_batch);
 
     res = TEEC_InvokeCommand(&sess, FORWARD_CMD,
                              &op, &origin);
@@ -197,19 +431,19 @@ void forward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, i
     free(params0);
 }
 
-void backward_connected_layer_CA_addidion()
+void backward_network_CA_addidion(int net_inputs, int net_batch)
 {
   TEEC_Operation op;
   uint32_t origin;
   TEEC_Result res;
 
-  net_input_back = malloc(sizeof(float) * 102400);
-  net_delta_back = malloc(sizeof(float) * 102400);
+  net_input_back = malloc(sizeof(float) * net_inputs*net_batch);
+  net_delta_back = malloc(sizeof(float) * net_inputs*net_batch);
 
 
   /////////  debug_plot  /////////
-  debug_plot("backward_net_input_back1_", sysCount, net_input_back, 102400);
-  debug_plot("backward_net_delta_back1_", sysCount, net_delta_back, 102400);
+  //debug_plot("backward_net_input_back1_", sysCount, net_input_back, net_inputs*net_batch);
+  //debug_plot("backward_net_delta_back1_", sysCount, net_delta_back, net_inputs*net_batch);
 
 
   memset(&op, 0, sizeof(op));
@@ -219,17 +453,16 @@ void backward_connected_layer_CA_addidion()
 
 
    op.params[0].tmpref.buffer = net_input_back;
-   op.params[0].tmpref.size = sizeof(float) * 102400;
+   op.params[0].tmpref.size = sizeof(float) * net_inputs*net_batch;
    op.params[1].tmpref.buffer = net_delta_back;
-   op.params[1].tmpref.size = sizeof(float) * 102400;
+   op.params[1].tmpref.size = sizeof(float) * net_inputs*net_batch;
 
    res = TEEC_InvokeCommand(&sess, BACKWARD_ADD_CMD,
                             &op, &origin);
 
     /////////  debug_plot  /////////
-    debug_plot("backward_net_input_back2_", sysCount, net_input_back, 102400);
-    debug_plot("backward_net_delta_back2_", sysCount, net_delta_back, 102400);
-
+    //debug_plot("backward_net_input_back2_", sysCount, net_input_back, net_inputs*net_batch);
+    //debug_plot("backward_net_delta_back2_", sysCount, net_delta_back, net_inputs*net_batch);
 
    if (res != TEEC_SUCCESS)
    errx(1, "TEEC_InvokeCommand(backward_add) failed 0x%x origin 0x%x",
@@ -238,7 +471,7 @@ void backward_connected_layer_CA_addidion()
 
 
 
-void backward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, float *net_delta, int net_train)
+void backward_network_CA(float *net_input, int l_inputs, int net_batch, float *net_delta, int net_train)
 {
     //invoke op and transfer paramters
     TEEC_Operation op;
@@ -272,8 +505,8 @@ void backward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, 
          res, origin);
 
      /////////  debug_plot  /////////
-    debug_plot("backward_net_input_", sysCount, params0, l_inputs*net_batch);
-     debug_plot("backward_net_delta_", sysCount, params1, l_inputs*net_batch);
+    //debug_plot("backward_net_input_", sysCount, params0, l_inputs*net_batch);
+    //debug_plot("backward_net_delta_", sysCount, params1, l_inputs*net_batch);
 
    free(params0);
    free(params1);
@@ -281,7 +514,7 @@ void backward_connected_layer_CA(float *net_input, int l_inputs, int net_batch, 
 
 
 
-void update_connected_layer_CA(update_args a)
+void update_network_CA(update_args a)
 {
     //invoke op and transfer paramters
     TEEC_Operation op;
@@ -345,11 +578,11 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch)
     res = TEEC_InvokeCommand(&sess, NET_TRUTH_CMD,
                              &op, &origin);
     if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
+    errx(1, "TEEC_InvokeCommand(truth) failed 0x%x origin 0x%x",
          res, origin);
 
      /////////  debug_plot  /////////
-     debug_plot("backward_net_truth_", sysCount, params0, net_truths*net_batch);
+     //debug_plot("backward_net_truth_", sysCount, params0, net_truths*net_batch);
 
     free(params0);
 }
@@ -377,7 +610,7 @@ void calc_network_loss_CA(int n, int batch)
     res = TEEC_InvokeCommand(&sess, CALC_LOSS_CMD,
                              &op, &origin);
     if (res != TEEC_SUCCESS)
-    errx(1, "TEEC_InvokeCommand(update) failed 0x%x origin 0x%x",
+    errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
          res, origin);
 }
 

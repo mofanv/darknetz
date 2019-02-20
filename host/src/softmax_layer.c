@@ -1,6 +1,7 @@
 #include "softmax_layer.h"
 #include "blas.h"
 #include "cuda.h"
+#include "parser.h"
 
 #include <float.h>
 #include <math.h>
@@ -11,7 +12,10 @@
 softmax_layer make_softmax_layer(int batch, int inputs, int groups)
 {
     assert(inputs%groups == 0);
-    //fprintf(stderr, "softmax                                        %4d\n",  inputs);
+
+    if(count_global <= partition_point){
+        fprintf(stderr, "softmax                                        %4d\n",  inputs);
+    }
     softmax_layer l = {0};
     l.type = SOFTMAX;
     l.batch = batch;
@@ -29,9 +33,9 @@ softmax_layer make_softmax_layer(int batch, int inputs, int groups)
     l.forward_gpu = forward_softmax_layer_gpu;
     l.backward_gpu = backward_softmax_layer_gpu;
 
-    l.output_gpu = cuda_make_array(l.output, inputs*batch); 
-    l.loss_gpu = cuda_make_array(l.loss, inputs*batch); 
-    l.delta_gpu = cuda_make_array(l.delta, inputs*batch); 
+    l.output_gpu = cuda_make_array(l.output, inputs*batch);
+    l.loss_gpu = cuda_make_array(l.loss, inputs*batch);
+    l.delta_gpu = cuda_make_array(l.delta, inputs*batch);
     #endif
     return l;
 }

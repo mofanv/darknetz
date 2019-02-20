@@ -3,6 +3,10 @@
 
 #include "darknetp_ta.h"
 
+#include "convolutional_layer_TA.h"
+#include "maxpool_layer_TA.h"
+#include "dropout_layer_TA.h"
+
 #include "connected_layer_TA.h"
 #include "softmax_layer_TA.h"
 #include "cost_layer_TA.h"
@@ -12,16 +16,10 @@
 #include "darknet_TA.h"
 #include "diffprivate_TA.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #define LOOKUP_SIZE 4096
 
-layer_TA lta;
-layer_TA lta_sm;
-layer_TA lta_c;
 float *netta_truth;
+int netnum = 0;
 
 TEE_Result TA_CreateEntryPoint(void)
 {
@@ -64,12 +62,200 @@ void TA_CloseSessionEntryPoint(void __maybe_unused *sess_ctx)
     IMSG("Goodbye!\n");
 }
 
+static TEE_Result make_netowork_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+  uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_NONE,
+                                             TEE_PARAM_TYPE_NONE );
+
+  //DMSG("has been called");
+  if (param_types != exp_param_types)
+  return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+    float *params1 = params[1].memref.buffer;
+
+    int n = params0[0];
+    int time_steps = params0[1];
+    int notruth = params0[2];
+    int batch = params0[3];
+    int subdivisions = params0[4];
+    int random = params0[5];
+    int adam = params0[6];
+    int h = params0[7];
+    int w = params0[8];
+    int c = params0[9];
+    int inputs = params0[10];
+    int max_crop = params0[11];
+    int min_crop = params0[12];
+    int center = params0[13];
+    int burn_in = params0[14];
+    int max_batches = params0[15];
+
+    float learning_rate = params1[0];
+    float momentum = params1[1];
+    float decay = params1[2];
+    float B1 = params1[3];
+    float B2 = params1[4];
+    float eps = params1[5];
+    float max_ratio = params1[6];
+    float min_ratio = params1[7];
+    float clip = params1[8];
+    float angle = params1[9];
+    float aspect = params1[10];
+    float saturation = params1[11];
+    float exposure = params1[12];
+    float hue = params1[13];
+    float power = params1[14];
+
+    make_network_TA(n, learning_rate, momentum, decay, time_steps, notruth, batch, subdivisions, random, adam, B1, B2, eps, h, w, c, inputs, max_crop, min_crop, max_ratio, min_ratio, center, clip, angle, aspect, saturation, exposure, hue, burn_in, power, max_batches);
+
+    return TEE_SUCCESS;
+}
+
+static TEE_Result update_net_agrv_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
+                                               TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE);
+
+    //DMSG("has been called");
+    if (param_types != exp_param_types)
+    return TEE_ERROR_BAD_PARAMETERS;
+
+    netta.workspace = params[1].memref.buffer;
+
+    return TEE_SUCCESS;
+}
+
+
+static TEE_Result make_convolutional_layer_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+  uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_VALUE_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_NONE);
+
+  //DMSG("has been called");
+  if (param_types != exp_param_types)
+  return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+    float params1 = params[1].value.a;
+    char *params2 = params[2].memref.buffer;
+
+    int batch = params0[0];
+    int h = params0[1];
+    int w = params0[2];
+    int c = params0[3];
+    int n = params0[4];
+    int groups = params0[5];
+    int size = params0[6];
+    int stride = params0[7];
+    int padding = params0[8];
+    int batch_normalize = params0[9];
+    int binary = params0[10];
+    int xnor = params0[11];
+    int adam = params0[12];
+    int flipped = params0[13];
+    float dot = params1;
+    char *acti = params2;
+
+    ACTIVATION_TA activation = get_activation_TA(acti);
+
+    layer_TA lta = make_convolutional_layer_TA_new(batch, h, w, c, n, groups, size, stride, padding, activation, batch_normalize, binary, xnor, adam, flipped, dot);
+    netta.layers[netnum] = lta;
+    netnum++;
+
+    return TEE_SUCCESS;
+}
+
+static TEE_Result make_maxpool_layer_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE);
+
+    //DMSG("has been called");
+    if (param_types != exp_param_types)
+    return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+
+    int batch = params0[0];
+    int h = params0[1];
+    int w = params0[2];
+    int c = params0[3];
+    int size = params0[4];
+    int stride = params0[5];
+    int padding = params0[6];
+
+    layer_TA lta = make_maxpool_layer_TA(batch, h, w, c, size, stride, padding);
+    netta.layers[netnum] = lta;
+    netnum++;
+
+    return TEE_SUCCESS;
+}
+
+static TEE_Result make_dropout_layer_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+  uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT);
+
+  //DMSG("has been called");
+  if (param_types != exp_param_types)
+  return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+    float *params1 = params[1].memref.buffer;
+    float *params2 = params[2].memref.buffer;
+    float *params3 = params[3].memref.buffer;
+    int buffersize = params[2].memref.size / sizeof(float);
+
+    int *passint;
+    passint = params0;
+    int batch = passint[0];
+    int inputs = passint[1];
+    int w = passint[2];
+    int h = passint[3];
+    int c = passint[4];
+    float probability = params1[0];
+
+    float *net_prev_output = params2;
+    float *net_prev_delta = params3;
+
+    layer_TA lta = make_dropout_layer_TA_new(batch, inputs, probability, w, h, c, netnum);
+
+    if(netnum == 0){
+      for(int z=0; z<buffersize; z++){
+        lta.output[z] = net_prev_output[z];
+        lta.delta[z] = net_prev_delta[z];
+      }
+    }else{
+        lta.output = netta.layers[netnum-1].output;
+        lta.delta = netta.layers[netnum-1].delta;
+    }
+
+    netta.layers[netnum] = lta;
+    netnum++;
+
+    return TEE_SUCCESS;
+}
+
 
 static TEE_Result make_connected_layer_TA_params(uint32_t param_types,
                                        TEE_Param params[4])
 {
-    make_network_TA();
-
     uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
                                                TEE_PARAM_TYPE_MEMREF_INPUT,
                                                TEE_PARAM_TYPE_NONE,
@@ -92,8 +278,9 @@ static TEE_Result make_connected_layer_TA_params(uint32_t param_types,
     acti = params[1].memref.buffer;
     ACTIVATION_TA activation = get_activation_TA(acti);
 
-    lta = make_connected_layer_TA_new(batch, inputs, outputs, activation, batch_normalize, adam);
-    netta.layers[0] = lta;
+    layer_TA lta = make_connected_layer_TA_new(batch, inputs, outputs, activation, batch_normalize, adam);
+    netta.layers[netnum] = lta;
+    netnum++;
 
     return TEE_SUCCESS;
 }
@@ -122,8 +309,9 @@ static TEE_Result make_softmax_layer_TA_params(uint32_t param_types,
     int noloss = params0[7];
     float temperature = params[1].value.a;
 
-    lta_sm = make_softmax_layer_TA_new(batch, inputs, groups, temperature, w, h, c, spatial, noloss);
-    netta.layers[1] = lta_sm;
+    layer_TA lta = make_softmax_layer_TA_new(batch, inputs, groups, temperature, w, h, c, spatial, noloss);
+    netta.layers[netnum] = lta;
+    netnum++;
 
     return TEE_SUCCESS;
 }
@@ -156,14 +344,15 @@ static TEE_Result make_cost_layer_TA_params(uint32_t param_types,
     ACTIVATION_TA cost_type = get_cost_type_TA(cost_t);
 
 
-    lta_c = make_cost_layer_TA_new(batch, inputs, cost_type, scale, ratio, noobject_scale, thresh);
-    netta.layers[2] = lta_c;
+    layer_TA lta = make_cost_layer_TA_new(batch, inputs, cost_type, scale, ratio, noobject_scale, thresh);
+    netta.layers[netnum] = lta;
+    netnum++;
 
     return TEE_SUCCESS;
 }
 
 
-static TEE_Result forward_connected_layer_TA_params(uint32_t param_types,
+static TEE_Result forward_network_TA_params(uint32_t param_types,
                                           TEE_Param params[4])
 {
     uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_INPUT,
@@ -201,23 +390,11 @@ static TEE_Result backward_network_back_TA_params(uint32_t param_types,
     //float *ltadelta_diff = diff_private(lta.delta, lta.outputs*lta.batch, 4.0f, 4.0f);
     //IMSG("diff");
 
-    /*
-    for(int z=0; z<20; z++){
-        char char0[20];
-        ftoa(ta_net_input[z],char0,8);
-        IMSG("z=%d, input=%s \n", z, char0);
-    }
-
-    for(int z=0; z<20; z++){
-        char char0[20];
-        ftoa(ta_net_delta[z],char0,8);
-        IMSG("z=%d, delta=%s \n", z, char0);
-    }
-    */
 
     float *params0 = params[0].memref.buffer;
     float *params1 = params[1].memref.buffer;
-    for(int z=0; z<102400; z++){
+    float *buffersize = params[0].memref.size / sizeof(float);
+    for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_input[z];
         params1[z] = ta_net_delta[z];
     }
@@ -229,7 +406,7 @@ static TEE_Result backward_network_back_TA_params(uint32_t param_types,
 
 
 
-static TEE_Result backward_connected_layer_TA_params(uint32_t param_types,
+static TEE_Result backward_network_TA_params(uint32_t param_types,
                                            TEE_Param params[4])
 {
 
@@ -256,7 +433,7 @@ static TEE_Result backward_connected_layer_TA_params(uint32_t param_types,
     return TEE_SUCCESS;
 }
 
-static TEE_Result update_connected_layer_TA_params(uint32_t param_types,
+static TEE_Result update_network_TA_params(uint32_t param_types,
                                          TEE_Param params[4])
 {
     uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_INPUT,
@@ -343,6 +520,21 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
     (void)&sess_ctx; /* Unused parameter */
 
     switch (cmd_id) {
+        case MAKE_NETWORK_CMD:
+        return make_netowork_TA_params(param_types, params);
+
+        case WORKSPACE_NETWORK_CMD:
+        return update_net_agrv_TA_params(param_types, params);
+
+        case MAKE_CONV_CMD:
+        return make_convolutional_layer_TA_params(param_types, params);
+
+        case MAKE_MAX_CMD:
+        return make_maxpool_layer_TA_params(param_types, params);
+
+        case MAKE_DROP_CMD:
+        return make_dropout_layer_TA_params(param_types, params);
+
         case MAKE_CONNECTED_CMD:
         return make_connected_layer_TA_params(param_types, params);
 
@@ -353,16 +545,16 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
         return make_cost_layer_TA_params(param_types, params);
 
         case FORWARD_CMD:
-        return forward_connected_layer_TA_params(param_types, params);
+        return forward_network_TA_params(param_types, params);
 
         case BACKWARD_CMD:
-        return backward_connected_layer_TA_params(param_types, params);
+        return backward_network_TA_params(param_types, params);
 
         case BACKWARD_ADD_CMD:
         return backward_network_back_TA_params(param_types, params);
 
         case UPDATE_CMD:
-        return update_connected_layer_TA_params(param_types, params);
+        return update_network_TA_params(param_types, params);
 
         case NET_TRUTH_CMD:
         return net_truth_TA_params(param_types, params);

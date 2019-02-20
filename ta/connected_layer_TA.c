@@ -5,6 +5,7 @@
 #include "utils_TA.h"
 #include "darknet_TA.h"
 #include "gemm_TA.h"
+#include "math_TA.h"
 #include "blas_TA.h"
 #include "activations_TA.h"
 #include "batchnorm_layer_TA.h"
@@ -54,6 +55,8 @@ void backward_connected_layer_TA_new(layer_TA l, network_TA net)
 
     gemm_TA(1,0,m,n,k,1,a,m,b,n,1,c,n);
 
+    //diff_private_SGD(l.bias_updates, l.outputs);
+    //diff_private_SGD(l.weight_updates, l.inputs*l.outputs);
 
     m = l.batch;
     k = l.outputs;

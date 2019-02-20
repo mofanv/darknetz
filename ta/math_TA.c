@@ -1,72 +1,11 @@
 #include "math_TA.h"
 
-#include <tee_internal_api.h>
-#include <tee_internal_api_extensions.h>
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-// reverses a string 'str' of length 'len'
-void reverse(char *str, int len)
-{
-    int i=0, j=len-1, temp;
-    while (i<j)
-    {
-        temp = str[i];
-        str[i] = str[j];
-        str[j] = temp;
-        i++; j--;
-    }
-}
-
-// Converts a given integer x to string str[].  d is the number
-// of digits required in output. If d is more than the number
-// of digits in x, then 0s are added at the beginning.
-int intToStr(int x, char str[], int d)
-{
-    int i = 0;
-    while (x)
-    {
-        str[i++] = (x%10) + '0';
-        x = x/10;
-    }
-
-    // If number of digits required is more, then
-    // add 0s at the beginning
-    while (i < d)
-        str[i++] = '0';
-
-    reverse(str, i);
-    str[i] = '\0';
-    return i;
-}
-
-// Converts a floating point number to string.
-void ftoa(float n, char *res, int afterpoint)
-{
-    // Extract integer part
-    int ipart = (int)n;
-
-    // Extract floating part
-    float fpart = n - (float)ipart;
-
-    // convert integer part to string
-    int i = intToStr(ipart, res, 0);
-
-    // check for display option after point
-    if (afterpoint != 0)
-    {
-        res[i] = '.';  // add dot
-
-        // Get the value of fraction part upto given no.
-        // of points after dot. The third parameter is needed
-        // to handle cases like 233.007
-        fpart = fpart * ta_pow(10, afterpoint);
-
-        intToStr((int)fpart, res + i + 1, afterpoint);
-    }
-}
+#include <tee_internal_api.h>
+#include <tee_internal_api_extensions.h>
 
 double ta_pow(double a, int n)
 {
@@ -105,29 +44,28 @@ double ta_exp(double x)
 }
 
 
-float ta_rand()
-{
-    uint16_t digest[20];
-    int sumrand = 0;
-    TEE_GenerateRandom(digest,sizeof(digest));
-    for(int i=0; i<20; i++){
-        unsigned int digest_int = digest[i];
-        sumrand += digest_int;
-    }
-    float rand_num = (float) (sumrand % 10000) / 10000;
+ float ta_rand()
+ {
+     uint16_t digest[20];
+     int sumrand = 0;
+     TEE_GenerateRandom(digest,sizeof(digest));
 
-    //char char0[30];
-    //ftoa(rand_num, char0, 5);
-    //IMSG("rand_num=%s\n",char0);
+     for(int i=0; i<20; i++){
+           unsigned int digest_int = digest[i];
+           sumrand += digest_int;
+     }
+     float rand_num = (float) (sumrand % 10000) / 10000;
 
-    return rand_num;
+     //char char0[30];
+     //ftoa(rand_num, char0, 5);
+     //IMSG("rand_num=%s\n",char0);
 
-}
+     return rand_num;
+ }
 
 /*
 #include <time.h>
 #include <stdlib.h>
-
 
 float ta_rand()
 {
@@ -135,7 +73,7 @@ float ta_rand()
     float r = (float)rand()/RAND_MAX;      // Returns a pseudo-random integer between 0 and RAND_MAX.
     return r;
 }
- */
+*/
 
 
 int ta_floor(double x)
@@ -196,4 +134,110 @@ double ta_ln(double x)
 double ta_log(double a,double N)
 {
     return ta_ln(N)/ta_ln(a);
+}
+
+double ta_sin(double x)
+{
+    double fl = 1;
+    if(x>2*PI || x<-2*PI) x -= (int)(x/(2*PI))*2*PI;
+    if(x>PI) x -= 2*PI;
+    if(x<-PI) x += 2*PI;
+    if(x>PI/2)
+    {
+        x -= PI;
+        fl *= -1;
+    }
+    if(x<-PI/2)
+    {
+        x += PI;
+        fl *= -1;
+    }
+    if(x>PI/4) return ta_cos(PI/2-x);
+    else return fl*(x - ta_pow(x,3)/6 + ta_pow(x,5)/120 - ta_pow(x,7)/5040 + ta_pow(x,9)/362880);
+}
+
+double ta_cos(double x)
+{
+    double fl = 1;
+    if(x>2*PI || x<-2*PI) x -= (int)(x/(2*PI))*2*PI;
+    if(x>PI) x -= 2*PI;
+    if(x<-PI) x += 2*PI;
+    if(x>PI/2)
+    {
+        x -= PI;
+        fl *= -1;
+    }
+    if(x<-PI/2)
+    {
+        x += PI;
+        fl *= -1;
+    }
+    if(x>PI/4) return ta_sin(PI/2-x);
+    else return fl*(1 - ta_pow(x,2)/2 + ta_pow(x,4)/24 - ta_pow(x,6)/720 + ta_pow(x,8)/40320);
+}
+
+double ta_tan(double x)
+{
+    return ta_sin(x)/ta_cos(x);
+}
+
+// reverses a string 'str' of length 'len'
+void reverse(char *str, int len)
+{
+    int i=0, j=len-1, temp;
+    while (i<j)
+    {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++; j--;
+    }
+}
+
+// Converts a given integer x to string str[].  d is the number
+// of digits required in output. If d is more than the number
+// of digits in x, then 0s are added at the beginning.
+int intToStr(int x, char str[], int d)
+{
+    int i = 0;
+    while (x)
+    {
+        str[i++] = (x%10) + '0';
+        x = x/10;
+    }
+
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (i < d)
+        str[i++] = '0';
+
+    reverse(str, i);
+    str[i] = '\0';
+    return i;
+}
+
+// Converts a floating point number to string.
+void ftoa(float n, char *res, int afterpoint)
+{
+    // Extract integer part
+    int ipart = (int)n;
+
+    // Extract floating part
+    float fpart = n - (float)ipart;
+
+    // convert integer part to string
+    int i = intToStr(ipart, res, 0);
+
+    // check for display option after point
+    if (afterpoint != 0)
+    {
+        res[i] = '.';  // add dot
+
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter is needed
+        // to handle cases like 233.007
+        fpart = fpart * ta_pow(10, afterpoint);
+
+        intToStr((int)fpart, res + i + 1, afterpoint);
+    }
 }

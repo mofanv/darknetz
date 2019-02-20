@@ -15,7 +15,7 @@ typedef struct{
     int *child;
     int *group;
     char **name;
-    
+
     int groups;
     int *group_size;
     int *group_offset;
@@ -87,7 +87,9 @@ struct layer_TA{
     void (*forward_TA)   (struct layer_TA, struct network_TA);
     void (*backward_TA)  (struct layer_TA, struct network_TA);
     void (*update_TA)    (struct layer_TA, update_args_TA);
-    
+
+    int netnum;
+
     int batch_normalize;
     int shortcut;
     int batch;
@@ -143,11 +145,11 @@ struct layer_TA{
     int tanh;
     int *mask;
     int total;
-    
+
     float alpha;
     float beta;
     float kappa;
-    
+
     float coord_scale;
     float object_scale;
     float noobject_scale;
@@ -161,18 +163,18 @@ struct layer_TA{
     float focus;
     int classfix;
     int absolute;
-    
+
     int onlyforward;
     int stopbackward;
     int dontload;
     int dontsave;
     int dontloadscales;
     int numload;
-    
+
     float temperature;
     float probability;
     float scale;
-    
+
     char  * cweights;
     int   * indexes;
     int   * input_layers;
@@ -189,58 +191,58 @@ struct layer_TA{
     float * state_delta;
     float * combine_cpu;
     float * combine_delta_cpu;
-    
+
     float * concat;
     float * concat_delta;
-    
+
     float * binary_weights;
-    
+
     float * biases;
     float * bias_updates;
-    
+
     float * scales;
     float * scale_updates;
-    
+
     float * weights;
     float * weight_updates;
-    
+
     float * delta;
     float * output;
     float * loss;
     float * squared;
     float * norms;
-    
+
     float * spatial_mean;
     float * mean;
     float * variance;
-    
+
     float * mean_delta;
     float * variance_delta;
-    
+
     float * rolling_mean;
     float * rolling_variance;
-    
+
     float * x;
     float * x_norm;
-    
+
     float * m;
     float * v;
-    
+
     float * bias_m;
     float * bias_v;
     float * scale_m;
     float * scale_v;
-    
-    
+
+
     float *z_cpu;
     float *r_cpu;
     float *h_cpu;
     float * prev_state_cpu;
-    
+
     float *temp_cpu;
     float *temp2_cpu;
     float *temp3_cpu;
-    
+
     float *dh_cpu;
     float *hh_cpu;
     float *prev_cell_cpu;
@@ -251,33 +253,33 @@ struct layer_TA{
     float *o_cpu;
     float *c_cpu;
     float *dc_cpu;
-    
+
     float * binary_input;
-    
+
     struct layer_TA *input_layer;
     struct layer_TA *self_layer;
     struct layer_TA *output_layer;
-    
+
     struct layer_TA *reset_layer;
     struct layer_TA *update_layer;
     struct layer_TA *state_layer;
-    
+
     struct layer_TA *input_gate_layer;
     struct layer_TA *state_gate_layer;
     struct layer_TA *input_save_layer;
     struct layer_TA *state_save_layer;
     struct layer_TA *input_state_layer;
     struct layer_TA *state_state_layer;
-    
+
     struct layer_TA *input_z_layer;
     struct layer_TA *state_z_layer;
-    
+
     struct layer_TA *input_r_layer;
     struct layer_TA *state_r_layer;
-    
+
     struct layer_TA *input_h_layer;
     struct layer_TA *state_h_layer;
-    
+
     struct layer_TA *wz;
     struct layer_TA *uz;
     struct layer_TA *wr;
@@ -292,9 +294,9 @@ struct layer_TA{
     struct layer_TA *wi;
     struct layer_TA *ug;
     struct layer_TA *wg;
-    
+
     tree_TA *softmax_tree;
-    
+
     size_t workspace_size;
 };
 
@@ -314,7 +316,7 @@ typedef struct network_TA{
     layer_TA *layers;
     float *output;
     learning_rate_policy_TA policy;
-    
+
     float learning_rate;
     float momentum;
     float decay;
@@ -328,12 +330,12 @@ typedef struct network_TA{
     int   *steps;
     int num_steps;
     int burn_in;
-    
+
     int adam;
     float B1;
     float B2;
     float eps;
-    
+
     int inputs;
     int outputs;
     int truths;
@@ -350,10 +352,10 @@ typedef struct network_TA{
     float saturation;
     float hue;
     int random;
-    
+
     int gpu_index;
     tree_TA *hierarchy;
-    
+
     float *input;
     float *truth;
     float *delta;
@@ -362,7 +364,7 @@ typedef struct network_TA{
     int index;
     float *cost;
     float clip;
-    
+
 } network_TA;
 
 #endif

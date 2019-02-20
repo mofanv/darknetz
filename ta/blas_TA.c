@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-float first_aim_money = 1000000.0f;
-
 void fill_cpu_TA(int N, float ALPHA, float *X, int INCX)
 {
     int i;

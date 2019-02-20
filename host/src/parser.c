@@ -41,7 +41,7 @@
 
 
 int count_global = 0;
-int partition_point = 5; // number 5 is the dropout layer
+int partition_point = 0; //4,5// number 5 is the dropout layer
 
 typedef struct{
     char *type;
@@ -209,6 +209,11 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     convolutional_layer layer = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor, params.net->adam);
     layer.flipped = option_find_int_quiet(options, "flipped", 0);
     layer.dot = option_find_float_quiet(options, "dot", 0);
+
+
+    if(count_global > partition_point){
+    make_convolutional_layer_CA(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor, params.net->adam, layer.flipped, layer.dot);
+    }
 
     return layer;
 }
@@ -516,6 +521,11 @@ maxpool_layer parse_maxpool(list *options, size_params params)
     if(!(h && w && c)) error("Layer before maxpool layer must output image.");
 
     maxpool_layer layer = make_maxpool_layer(batch,h,w,c,size,stride,padding);
+
+    if(count_global > partition_point){
+        make_maxpool_layer_CA(batch,h,w,c,size,stride,padding);
+    }
+
     return layer;
 }
 
@@ -532,13 +542,21 @@ avgpool_layer parse_avgpool(list *options, size_params params)
     return layer;
 }
 
-dropout_layer parse_dropout(list *options, size_params params)
+dropout_layer parse_dropout(list *options, size_params params, float *net_prev_output, float *net_prev_delta)
 {
     float probability = option_find_float(options, "probability", .5);
     dropout_layer layer = make_dropout_layer(params.batch, params.inputs, probability);
     layer.out_w = params.w;
     layer.out_h = params.h;
     layer.out_c = params.c;
+
+    layer.output = net_prev_output;
+    layer.delta = net_prev_delta;
+
+    if(count_global > partition_point){
+        make_dropout_layer_CA(params.batch, params.inputs, probability, params.w, params.h, params.c, net_prev_output, net_prev_delta);
+    }
+
     return layer;
 }
 
@@ -753,6 +771,8 @@ void parse_net_options(list *options, network *net)
     } else if (net->policy == POLY || net->policy == RANDOM){
     }
     net->max_batches = option_find_int(options, "max_batches", 0);
+
+    make_network_CA(net->n - partition_point - 1, net->learning_rate, net->momentum, net->decay, net->time_steps, net->notruth, net->batch, net->subdivisions, net->random, net->adam, net->B1, net->B2, net->eps, net->h, net->w, net->c, net->inputs, net->max_crop, net->min_crop, net->max_ratio, net->min_ratio, net->center, net->clip, net->angle, net->aspect, net->saturation, net->exposure, net->hue, net->burn_in, net->power, net->max_batches);
 }
 
 int is_network(section *s)
@@ -767,6 +787,7 @@ network *parse_network_cfg(char *filename)
     node *n = sections->front;
     if(!n) error("Config file has no sections");
     network *net = make_network(sections->size - 1);
+
     net->gpu_index = gpu_index;
     size_params params;
 
@@ -851,9 +872,7 @@ network *parse_network_cfg(char *filename)
         }else if(lt == SHORTCUT){
             l = parse_shortcut(options, params, net);
         }else if(lt == DROPOUT){
-            l = parse_dropout(options, params);
-            l.output = net->layers[count-1].output;
-            l.delta = net->layers[count-1].delta;
+            l = parse_dropout(options, params, net->layers[count-1].output, net->layers[count-1].delta);
 
 #ifdef GPU
             l.output_gpu = net->layers[count-1].output_gpu;
@@ -904,7 +923,7 @@ network *parse_network_cfg(char *filename)
     net->truth_gpu = cuda_make_array(net->truth, net->truths*net->batch);
 #endif
     if(workspace_size){
-        //printf("%ld\n", workspace_size);
+        //printf("workspace_size=%ld\n", workspace_size);
 #ifdef GPU
         if(gpu_index >= 0){
             net->workspace = cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);
@@ -913,6 +932,8 @@ network *parse_network_cfg(char *filename)
         }
 #else
         net->workspace = calloc(1, workspace_size);
+
+        //netta.workspace = net->workspace;
 #endif
     }
 

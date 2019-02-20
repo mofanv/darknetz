@@ -2,8 +2,13 @@
 #include "utils_TA.h"
 #include "diffprivate_TA.h"
 
-float *diff_private(float *input, int len_input, float bound, float epsilon)
+void *diff_private_SGD(float *input, int len_input)
 {
+    //initial parameters
+    float bound = 4;
+    float epsilon = 4;
+    float delta = 0.00001;
+    
     float sum = 0;
     for(int i=0; i<len_input; i++){
         sum += input[i] * input[i];
@@ -14,12 +19,10 @@ float *diff_private(float *input, int len_input, float bound, float epsilon)
         squm = 1;
     }
     
-    float sigma = (2*bound*bound)/ (epsilon*epsilon) * ta_log(10, 5/(4*epsilon));
+    float sigma = ta_sqrt((2*bound*bound)/ (epsilon*epsilon) * ta_log(10, 1.25/delta));
     
-    float *output = malloc(len_input * sizeof(float));
     for(int i=0; i<len_input; i++){
-        output[i] = input[i]/squm + rand_normal_TA(0.0f, sigma);
+        input[i] = input[i]/squm + rand_normal_TA(0.0f, sigma);
+        //printf("sigma=%f,delta=%f,ta_log(10, 1.25/delta)=%f, rand_normal=%f\n",sigma,delta,ta_log(10, 1.25/delta),rand_normal_TA(0.0f, sigma));
     }
-    
-    return output;
 }
