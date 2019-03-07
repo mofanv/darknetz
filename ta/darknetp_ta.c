@@ -119,7 +119,7 @@ static TEE_Result update_net_agrv_TA_params(uint32_t param_types,
                                        TEE_Param params[4])
 {
     uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
-                                               TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_MEMREF_INOUT,
                                                TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE);
 

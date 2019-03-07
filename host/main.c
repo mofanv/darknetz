@@ -139,7 +139,7 @@ void update_net_agrv_CA(int cond, int workspace_size, float *workspace)
         workspaceSM.buffer = workspace;
 
         memset(&op, 0, sizeof(op));
-        op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INPUT, TEEC_MEMREF_PARTIAL_INPUT,
+        op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INPUT, TEEC_MEMREF_PARTIAL_INOUT,
                                          TEEC_NONE, TEEC_NONE);
 
         op.params[0].value.a = cond;

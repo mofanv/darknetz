@@ -76,7 +76,7 @@ void forward_network_TA()
 
         l.forward_TA(l, netta);
 
-        netta.input = l.output;
+         netta.input = l.output;
 
         if(l.truth) {
             netta.truth = l.output;
