@@ -46,5 +46,7 @@ image get_convolutional_weight(convolutional_layer layer, int i);
 int convolutional_out_height(convolutional_layer layer);
 int convolutional_out_width(convolutional_layer layer);
 
+void backward_bias_diff(float *bias_updates, float *delta, int batch, int n, int size);
+
 #endif
 

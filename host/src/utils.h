@@ -49,5 +49,7 @@ float sec(clock_t clocks);
 void print_statistics(float *a, int n);
 int int_index(int *a, int val, int n);
 
+float rand_normal_ms(float mu, float sigma);
+
 #endif
 

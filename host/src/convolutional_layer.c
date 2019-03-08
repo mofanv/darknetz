@@ -1,3 +1,5 @@
+#include "diffprivate.h"
+
 #include "convolutional_layer.h"
 #include "utils.h"
 #include "batchnorm_layer.h"
@@ -453,6 +455,19 @@ void backward_bias(float *bias_updates, float *delta, int batch, int n, int size
     }
 }
 
+void backward_bias_diff(float *bias_updates, float *delta, int batch, int n, int size)
+{
+    int i,b;
+    for(b = 0; b < batch; ++b){
+        for(i = 0; i < n; ++i){
+            bias_updates[i] += sum_array(delta+size*(i+b*n), size);
+            //printf("bias_updates=%f\n",bias_updates[i]);
+        }
+        // differential privacy
+        diff_private_func(bias_updates, n);
+    }
+}
+
 debug_num = 0;
 
 void forward_convolutional_layer(convolutional_layer l, network net)
@@ -514,7 +529,12 @@ void backward_convolutional_layer(convolutional_layer l, network net)
     if(l.batch_normalize){
         backward_batchnorm_layer(l, net);
     } else {
-        backward_bias(l.bias_updates, l.delta, l.batch, l.n, k);
+        //differential privacy
+        if(net.index < global_dp){
+            backward_bias_diff(l.bias_updates, l.delta, l.batch, l.n, k);
+        }else{
+            backward_bias(l.bias_updates, l.delta, l.batch, l.n, k);
+        }
     }
 
     for(i = 0; i < l.batch; ++i){
@@ -550,6 +570,10 @@ void backward_convolutional_layer(convolutional_layer l, network net)
                 }
             }
         }
+    }
+    if(net.index < global_dp){
+        //differential privacy
+        diff_private_func(l.weight_updates, l.nweights);
     }
 }
 

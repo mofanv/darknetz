@@ -42,6 +42,7 @@
 
 int count_global = 0;
 int partition_point = 0; //4,5// number 5 is the dropout layer
+int global_dp = 0;
 
 typedef struct{
     char *type;

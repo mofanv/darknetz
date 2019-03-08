@@ -1138,6 +1138,8 @@ void run_classifier(int argc, char **argv)
     // partition point of DNN
     int pp = find_int_arg(argc, argv, "-pp", 5);
     partition_point = pp - 1;
+    int dp = find_int_arg(argc, argv, "-dp", -1);
+    global_dp = dp;
 
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int top = find_int_arg(argc, argv, "-t", 0);

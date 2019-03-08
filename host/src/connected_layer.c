@@ -181,7 +181,12 @@ void backward_connected_layer(layer l, network net)
     if(l.batch_normalize){
         backward_batchnorm_layer(l, net);
     } else {
-        backward_bias(l.bias_updates, l.delta, l.batch, l.outputs, 1);
+        //differential privacy
+        if(net.index < global_dp){
+            backward_bias_diff(l.bias_updates, l.delta, l.batch, l.outputs, 1);
+        }else{
+            backward_bias(l.bias_updates, l.delta, l.batch, l.outputs, 1);
+        }
     }
 
     int m = l.outputs;
@@ -190,7 +195,13 @@ void backward_connected_layer(layer l, network net)
     float *a = l.delta;
     float *b = net.input;
     float *c = l.weight_updates;
-    gemm(1,0,m,n,k,1,a,m,b,n,1,c,n);
+    
+    //differential privacy
+    if(net.index < global_dp){
+        gemm_diff(1,0,m,n,k,1,a,m,b,n,1,c,n);
+    }else{
+        gemm(1,0,m,n,k,1,a,m,b,n,1,c,n);
+    }
 
     m = l.batch;
     k = l.outputs;
