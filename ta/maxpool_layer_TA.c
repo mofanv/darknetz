@@ -48,7 +48,7 @@ maxpool_layer_TA make_maxpool_layer_TA(int batch, int h, int w, int c, int size,
     l.forward_TA = forward_maxpool_layer_TA_new;
     l.backward_TA = backward_maxpool_layer_TA_new;
 
-    IMSG("max_TA       %d x %d / %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
+    #IMSG("max_TA       %d x %d / %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
     return l;
 }
 

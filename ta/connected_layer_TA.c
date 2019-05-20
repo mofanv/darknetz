@@ -163,7 +163,7 @@ layer_TA make_connected_layer_TA_new(int batch, int inputs, int outputs, ACTIVAT
     }
 
     l.activation = activation;
-    IMSG("connected_TA                         %4d  ->  %4d\n", inputs, outputs);
+    #IMSG("connected_TA                         %4d  ->  %4d\n", inputs, outputs);
 
     return l;
 }

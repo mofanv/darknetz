@@ -28,6 +28,8 @@ dropout_layer make_dropout_layer(int batch, int inputs, float probability)
     int boo = (count_global <= partition_point);
     if(count_global <= partition_point){
         fprintf(stderr, "dropout       p = %.2f               %4d  ->  %4d\n", probability, inputs, inputs);
+    }else{
+        fprintf(stderr, "dropout_TA    p = %.2f               %4d  ->  %4d\n", probability, inputs, inputs);
     }
     return l;
 }

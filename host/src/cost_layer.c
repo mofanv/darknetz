@@ -44,6 +44,8 @@ cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float sca
 {
     if(count_global <= partition_point){
         fprintf(stderr, "cost                                           %4d\n",  inputs);
+    }else{
+        fprintf(stderr, "cost_TA                                        %4d\n",  inputs);
     }
     cost_layer l = {0};
     l.type = COST;

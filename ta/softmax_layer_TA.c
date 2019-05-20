@@ -15,7 +15,7 @@
 softmax_layer_TA make_softmax_layer_TA_new(int batch, int inputs, int groups, float temperature, int w, int h, int c, int spatial, int noloss)
 {
     assert(inputs%groups == 0);
-    IMSG("softmax_TA                                     %4d\n",  inputs);
+    #IMSG("softmax_TA                                     %4d\n",  inputs);
     softmax_layer_TA l = {0};
     l.type = SOFTMAX_TA;
     l.batch = batch;

@@ -15,6 +15,8 @@ softmax_layer make_softmax_layer(int batch, int inputs, int groups)
 
     if(count_global <= partition_point){
         fprintf(stderr, "softmax                                        %4d\n",  inputs);
+    }else{
+        fprintf(stderr, "softmax_TA                                     %4d\n",  inputs);
     }
     softmax_layer l = {0};
     l.type = SOFTMAX;
