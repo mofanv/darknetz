@@ -46,7 +46,7 @@ char *get_cost_string_TA(COST_TYPE_TA a)
 
 cost_layer_TA make_cost_layer_TA_new(int batch, int inputs, COST_TYPE_TA cost_type, float scale, float ratio, float noobject_scale, float thresh)
 {
-    #IMSG("cost_TA                                        %4d\n",  inputs);
+    //IMSG("cost_TA                                        %4d\n",  inputs);
     cost_layer_TA l = {0};
     l.type = COST_TA;
 

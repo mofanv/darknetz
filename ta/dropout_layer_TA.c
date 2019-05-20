@@ -32,7 +32,7 @@ dropout_layer_TA make_dropout_layer_TA_new(int batch, int inputs, float probabil
 
     char prob[20];
     ftoa(probability,prob,3);
-    #IMSG("dropout_TA    p = %s               %4d  ->  %4d\n", prob, inputs, inputs);
+    //IMSG("dropout_TA    p = %s               %4d  ->  %4d\n", prob, inputs, inputs);
     return l;
 }
 
