@@ -161,7 +161,7 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
         netta.index = i;
         l.backward_TA(l, netta);
 
-        if(l.type == DROPOUT_TA){
+        if((l.type == DROPOUT_TA) && (i == 0)){
             for(int z=0; z<l.inputs*l.batch; z++){
                 ta_net_input[z] = l.output[z];
                 ta_net_delta[z] = l.delta[z];
