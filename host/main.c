@@ -20,6 +20,7 @@ float *net_input_back;
 float *net_delta_back;
 int sysCount = 0;
 
+
 void debug_plot(char *filename, int num, float *tobeplot, int length)
 {
     FILE * fp;
@@ -395,6 +396,35 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
     if (res != TEEC_SUCCESS)
     errx(1, "TEEC_InvokeCommand(COST) failed 0x%x origin 0x%x",
          res, origin);
+}
+
+void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional)
+{
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+    
+    int passint[3];
+    passint[0] = length;
+    passint[1] = layer_i;
+    passint[2] = additional;
+    
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT, TEEC_NONE);
+    
+    op.params[0].tmpref.buffer = vec;
+    op.params[0].tmpref.size = sizeof(float)*length;
+    
+    op.params[1].tmpref.buffer = passint;
+    op.params[1].tmpref.size = sizeof(passint);
+    
+    op.params[2].value.a = type;
+    
+    res = TEEC_InvokeCommand(&sess, TRANS_WEI_CMD,
+                             &op, &origin);
+    if (res != TEEC_SUCCESS)
+        errx(1, "TEEC_InvokeCommand(TRANS_WEI) failed 0x%x origin 0x%x",
+             res, origin);
 }
 
 

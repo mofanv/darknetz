@@ -1172,6 +1172,25 @@ void load_connected_weights(layer l, FILE *fp, int transpose)
 #endif
 }
 
+void load_connected_weights_comm(layer l, FILE *fp, int, i, int transpose)
+{
+    fread(l.biases, sizeof(float), l.outputs, fp);
+    fread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+    
+    transfer_weights_CA(l.biases, l.outputs, i, 'b', 0);
+    transfer_weights_CA(l.weights, l.outputs*l.inputs, i, 'w', transpose);
+
+    if (l.batch_normalize && (!l.dontloadscales)){
+        fread(l.scales, sizeof(float), l.outputs, fp);
+        fread(l.rolling_mean, sizeof(float), l.outputs, fp);
+        fread(l.rolling_variance, sizeof(float), l.outputs, fp);
+        
+        transfer_weights_CA(l.scales, l.outputs, i, 's', 0);
+        transfer_weights_CA(l.rolling_mean, l.outputs, i, 'rm', 0);
+        transfer_weights_CA(l.rolling_variance, l.outputs, i, 'rv', 0);
+    }
+}
+
 void load_batchnorm_weights(layer l, FILE *fp)
 {
     fread(l.scales, sizeof(float), l.c, fp);
@@ -1182,6 +1201,17 @@ void load_batchnorm_weights(layer l, FILE *fp)
         push_batchnorm_layer(l);
     }
 #endif
+}
+
+void load_batchnorm_weights_comm(layer l, FILE *fp, int i)
+{
+    fread(l.scales, sizeof(float), l.c, fp);
+    fread(l.rolling_mean, sizeof(float), l.c, fp);
+    fread(l.rolling_variance, sizeof(float), l.c, fp);
+    
+    transfer_weights_CA(l.scales, l.c, i, 's', 0);
+    transfer_weights_CA(l.rolling_mean, l.c, i, 'rm', 0);
+    transfer_weights_CA(l.rolling_variance, l.c, i, 'rv', 0);
 }
 
 void load_convolutional_weights_binary(layer l, FILE *fp)
@@ -1267,6 +1297,28 @@ void load_convolutional_weights(layer l, FILE *fp)
 #endif
 }
 
+void load_convolutional_weights_comm(layer l, FILE *fp, int i)
+{
+    if(l.numload) l.n = l.numload;
+    int num = l.c/l.groups*l.n*l.size*l.size;
+    
+    fread(l.biases, sizeof(float), l.n, fp);
+    transfer_weights_CA(l.biases, l.n, i, 'b', 0);
+    
+    if (l.batch_normalize && (!l.dontloadscales)){
+        fread(l.scales, sizeof(float), l.n, fp);
+        fread(l.rolling_mean, sizeof(float), l.n, fp);
+        fread(l.rolling_variance, sizeof(float), l.n, fp);
+        
+        transfer_weights_CA(l.scales, l.n, i, 's', 0);
+        transfer_weights_CA(l.rolling_mean, l.n, i, 'rm', 0);
+        transfer_weights_CA(l.rolling_variance, l.n, i, 'rv', 0);
+    }
+    
+    fread(l.weights, sizeof(float), num, fp);
+    transfer_weights_CA(l.weights, num, i, 'w', 0);
+}
+
 
 void load_weights_upto(network *net, char *filename, int start, int cutoff)
 {
@@ -1296,64 +1348,107 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     int transpose = (major > 1000) || (minor > 1000);
 
     int i;
+    
     for(i = start; i < net->n && i < cutoff; ++i){
-        layer l = net->layers[i];
-        if (l.dontload) continue;
-        if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-            load_convolutional_weights(l, fp);
-        }
-        if(l.type == CONNECTED){
-            load_connected_weights(l, fp, transpose);
-        }
-        if(l.type == BATCHNORM){
-            load_batchnorm_weights(l, fp);
-        }
-        if(l.type == CRNN){
-            load_convolutional_weights(*(l.input_layer), fp);
-            load_convolutional_weights(*(l.self_layer), fp);
-            load_convolutional_weights(*(l.output_layer), fp);
-        }
-        if(l.type == RNN){
-            load_connected_weights(*(l.input_layer), fp, transpose);
-            load_connected_weights(*(l.self_layer), fp, transpose);
-            load_connected_weights(*(l.output_layer), fp, transpose);
-        }
-        if (l.type == LSTM) {
-            load_connected_weights(*(l.wi), fp, transpose);
-            load_connected_weights(*(l.wf), fp, transpose);
-            load_connected_weights(*(l.wo), fp, transpose);
-            load_connected_weights(*(l.wg), fp, transpose);
-            load_connected_weights(*(l.ui), fp, transpose);
-            load_connected_weights(*(l.uf), fp, transpose);
-            load_connected_weights(*(l.uo), fp, transpose);
-            load_connected_weights(*(l.ug), fp, transpose);
-        }
-        if (l.type == GRU) {
-            if(1){
-                load_connected_weights(*(l.wz), fp, transpose);
-                load_connected_weights(*(l.wr), fp, transpose);
-                load_connected_weights(*(l.wh), fp, transpose);
-                load_connected_weights(*(l.uz), fp, transpose);
-                load_connected_weights(*(l.ur), fp, transpose);
-                load_connected_weights(*(l.uh), fp, transpose);
-            }else{
-                load_connected_weights(*(l.reset_layer), fp, transpose);
-                load_connected_weights(*(l.update_layer), fp, transpose);
-                load_connected_weights(*(l.state_layer), fp, transpose);
+        
+        // load weights of the NW side
+        if(i <= partition_point){
+            layer l = net->layers[i];
+            if (l.dontload) continue;
+            if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+                load_convolutional_weights(l, fp);
             }
-        }
-        if(l.type == LOCAL){
-            int locations = l.out_w*l.out_h;
-            int size = l.size*l.size*l.c*l.n*locations;
-            fread(l.biases, sizeof(float), l.outputs, fp);
-            fread(l.weights, sizeof(float), size, fp);
+            if(l.type == CONNECTED){
+                load_connected_weights(l, fp, transpose);
+            }
+            if(l.type == BATCHNORM){
+                load_batchnorm_weights(l, fp);
+            }
+            if(l.type == CRNN){
+                load_convolutional_weights(*(l.input_layer), fp);
+                load_convolutional_weights(*(l.self_layer), fp);
+                load_convolutional_weights(*(l.output_layer), fp);
+            }
+            if(l.type == RNN){
+                load_connected_weights(*(l.input_layer), fp, transpose);
+                load_connected_weights(*(l.self_layer), fp, transpose);
+                load_connected_weights(*(l.output_layer), fp, transpose);
+            }
+            if (l.type == LSTM) {
+                load_connected_weights(*(l.wi), fp, transpose);
+                load_connected_weights(*(l.wf), fp, transpose);
+                load_connected_weights(*(l.wo), fp, transpose);
+                load_connected_weights(*(l.wg), fp, transpose);
+                load_connected_weights(*(l.ui), fp, transpose);
+                load_connected_weights(*(l.uf), fp, transpose);
+                load_connected_weights(*(l.uo), fp, transpose);
+                load_connected_weights(*(l.ug), fp, transpose);
+            }
+            if (l.type == GRU) {
+                if(1){
+                    load_connected_weights(*(l.wz), fp, transpose);
+                    load_connected_weights(*(l.wr), fp, transpose);
+                    load_connected_weights(*(l.wh), fp, transpose);
+                    load_connected_weights(*(l.uz), fp, transpose);
+                    load_connected_weights(*(l.ur), fp, transpose);
+                    load_connected_weights(*(l.uh), fp, transpose);
+                }else{
+                    load_connected_weights(*(l.reset_layer), fp, transpose);
+                    load_connected_weights(*(l.update_layer), fp, transpose);
+                    load_connected_weights(*(l.state_layer), fp, transpose);
+                }
+            }
+            if(l.type == LOCAL){
+                int locations = l.out_w*l.out_h;
+                int size = l.size*l.size*l.c*l.n*locations;
+                fread(l.biases, sizeof(float), l.outputs, fp);
+                fread(l.weights, sizeof(float), size, fp);
 #ifdef GPU
-            if(gpu_index >= 0){
-                push_local_layer(l);
-            }
+                if(gpu_index >= 0){
+                    push_local_layer(l);
+                }
 #endif
+            }
+            
+        // load weights of the NW side
+        }
+        else{
+            layer l = net->layers[i];
+            layerTA_i = i - partition_point - 1;
+            
+            if (l.dontload) continue;
+            if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+                load_convolutional_weights_comm(l, fp, layerTA_i);
+            }
+            if(l.type == CONNECTED){
+                load_connected_weights_comm(l, fp, layerTA_i, transpose);
+            }
+            if(l.type == BATCHNORM){
+                load_batchnorm_weights_comm(l, fp, layerTA_i);
+            }
+            if(l.type == CRNN){
+                load_convolutional_weights_comm(*(l.input_layer), fp, layerTA_i);
+                load_convolutional_weights_comm(*(l.self_layer), fp, layerTA_i);
+                load_convolutional_weights_comm(*(l.output_layer), fp, layerTA_i);
+            }
+            if(l.type == RNN){
+                load_connected_weights_comm(*(l.input_layer), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.self_layer), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.output_layer), fp, layerTA_i, transpose);
+            }
+            if (l.type == LSTM) {
+                load_connected_weights_comm(*(l.wi), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.wf), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.wo), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.wg), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.ui), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.uf), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.uo), fp, layerTA_i, transpose);
+                load_connected_weights_comm(*(l.ug), fp, layerTA_i, transpose);
+            }
         }
     }
+
     fprintf(stderr, "Done!\n");
     fclose(fp);
 }
