@@ -1414,7 +1414,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
         }
         else{
             layer l = net->layers[i];
-            layerTA_i = i - partition_point - 1;
+            int layerTA_i = i - partition_point - 1;
             
             if (l.dontload) continue;
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
