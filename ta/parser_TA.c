@@ -37,10 +37,10 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     else if(type == 's'){
         copy_cpu_TA(length, vec, 1, l.scales, 1);
     }
-    else if(type == 'rm'){
+    else if(type == 'm'){
         copy_cpu_TA(length, vec, 1, l.rolling_mean, 1);
     }
-    else if(type == 'rv'){
+    else if(type == 'v'){
         copy_cpu_TA(length, vec, 1, l.rolling_variance, 1);
     }
     
