@@ -26,7 +26,7 @@ void transpose_matrix_TA(float *a, int rows, int cols)
 
 void load_weights_TA(float *vec, int length, int layer_i, char type, int transpose)
 {
-    layer l = netta.layers[layer_i];
+    layer_TA l = netta.layers[layer_i];
 
     if(type == 'b'){
         copy_cpu_TA(length, vec, 1, l.biases, 1);
@@ -45,12 +45,12 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     }
     
     
-    if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+    if(l.type == CONVOLUTIONAL_TA || l.type == DECONVOLUTIONAL_TA){
         if(l.flipped && type == 'w'){
             transpose_matrix_TA(l.weights, l.c*l.size*l.size, l.n);
         }
     }
-    else if(l.type == CONNECTED){
+    else if(l.type == CONNECTED_TA){
         if(transpose && type == 'w'){
             transpose_matrix_TA(l.weights, l.inputs, l.outputs);
         }
