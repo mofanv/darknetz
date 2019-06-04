@@ -1,4 +1,4 @@
-This is an application that help to run several layers of a Deep Neural Network (DNN) model in TrustZone.
+This is an application that runs several layers of a Deep Neural Network (DNN) model in TrustZone.
 
 This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and need to be run with [OP-TEE](https://www.op-tee.org/), a open source framework for Arm TrustZone.
 
@@ -49,7 +49,9 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 ```
 
 4) rebuild the OP-TEE
+
 **For simulation**, to run `make run` again.
+
 **For read board**, to run `make all` again, and flash the OP-TEE to your device.
 
 5) after boot your devices or QEMU, to test by command
@@ -63,4 +65,11 @@ usage: ./darknet <function>
 Awesome! You are really to run DNN layers in TrustZone.
 
 # Train Models
+
+To train a model from scratch 
+```
+darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg
+```
+You can choose the partition point from layers in TEE by adjusting argument `-pp`.
+
 
