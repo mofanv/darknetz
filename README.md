@@ -15,7 +15,6 @@ You can run this application with real TrustZone or a simulated one by using QEM
 1) Follow **step1** ~ **step5** in "**Get and build the solution**" to build the OP-TEE solution.
 https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
-<<<<<<< HEAD
 2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device specific.
 
    **For simulation**: If you have chosen QEMU-v7/v8, to run the bellow command to start QEMU console.
@@ -31,10 +30,22 @@ xtest
 ```
 
 ## (2) Build Darknetp
-clone this 
-=======
+1) clone this git
+```
+git clone -b comunicate https://github.com/mofanv/darknetp.git
+```
+
+2)copy datasets to root dir
+cp -a $PATH_darknetp$/tz_datasets/. $PATH_OPTEE$/out-br/target/root/
+rm -rf $PATH_darknetp$/tz_datasets
+
+3) copy Darknetp to example dir
+mkdir $PATH_OPTEE$/optee_examples/darknetp
+cp -a $PATH_darknetp$/. $PATH_OPTEE$/optee_examples/darknetp/
 
 
 
-https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
->>>>>>> parent of 39198a4... struct update
+$PATH_OPTEE$
+
+
+
