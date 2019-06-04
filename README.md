@@ -118,7 +118,7 @@ darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mni
 
 # License
 ```
-Copyright (c) 2019. Queen Mary University of London
+Copyright (c) 2019. Imperial College London
 Fan Mo, f.mo18@imperial.ac.uk
 
 Darknetp is free software: you can redistribute it and/or modify
