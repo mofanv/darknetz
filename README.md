@@ -100,12 +100,12 @@ You will see output from the Normal World like this:
 ...
 ```
 
-Layers with `_TA` are running in the TrustZone. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted World. The output from the Trusted world is like this:
+Layers with `_TA` are running in the TrustZone. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted World. The output from the Trusted World is like this:
 ```
-I/TA:  loss = 1.62141, avg loss = 1.62540 from the TA
-I/TA:  loss = 1.58659, avg loss = 1.61783 from the TA
-I/TA:  loss = 1.57328, avg loss = 1.59886 from the TA
-I/TA:  loss = 1.52641, avg loss = 1.57889 from the TA
+# I/TA:  loss = 1.62141, avg loss = 1.62540 from the TA
+# I/TA:  loss = 1.58659, avg loss = 1.61783 from the TA
+# I/TA:  loss = 1.57328, avg loss = 1.59886 from the TA
+# I/TA:  loss = 1.52641, avg loss = 1.57889 from the TA
 ...
 ```
 
