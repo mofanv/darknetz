@@ -1,6 +1,6 @@
 This is an application that runs several layers of a Deep Neural Network (DNN) model in TrustZone.
 
-This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and need to be run with [OP-TEE](https://www.op-tee.org/), a open source framework for Arm TrustZone.
+This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and needs to be run with [OP-TEE](https://www.op-tee.org/), an open source framework for Arm TrustZone.
 
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
@@ -17,7 +17,7 @@ https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
 2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device specific.
 
-   **For simulation**: If you have chosen QEMU-v7/v8, to run the bellow command to start QEMU console.
+   **For simulation**: If you have chosen QEMU-v7/v8, to run the below command to start QEMU console.
 ```
 make run
 (qemu)c
@@ -54,7 +54,7 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For read board**, to run `make all` again, and flash the OP-TEE to your device.
 
-5) after boot your devices or QEMU, to test by command
+5) after boot your devices or QEMU, to test by the command
 ```
 darknetp
 ```
@@ -70,7 +70,7 @@ Awesome! You are really to run DNN layers in TrustZone.
 ```
 darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg
 ```
-You can choose the partition point from layers in TEE by adjusting argument `-pp`.
+You can choose the partition point of layers in the TEE by adjusting the argument `-pp`.
 
 You will see output from the Normal World like this:
 ```
@@ -99,7 +99,7 @@ You will see output from the Normal World like this:
 ...
 ```
 
-Layers with `_TA` are running in the TrustZone. THe training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted world. The output from the Trusted world is like this:
+Layers with `_TA` are running in the TrustZone. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted World. The output from the Trusted world is like this:
 ```
 I/TA:  loss = 1.62141, avg loss = 1.62540 from the TA
 I/TA:  loss = 1.58659, avg loss = 1.61783 from the TA
