@@ -12,6 +12,7 @@ You can run this application with real TrustZone or a simulated one by using QEM
 **For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/building/devices/index.html) for more info.
 
 # Setup
+## (1) Set up OP-TEE
 1) Follow **step1** ~ **step5** in "**Get and build the solution**" to build the OP-TEE solution.
 https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
@@ -120,21 +121,18 @@ darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mni
 Copyright (c) 2019. Queen Mary University of London
 Fan Mo, f.mo18@imperial.ac.uk
 
-This file is part of SensingKit-Android library.
-For more information, please visit http://www.sensingkit.org.
-
-SensingKit-Android is free software: you can redistribute it and/or modify
+Darknetp is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-SensingKit-Android is distributed in the hope that it will be useful,
+Darknetp is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with SensingKit-Android.  If not, see <http://www.gnu.org/licenses/>.
+along with Darknetp.  If not, see <http://www.gnu.org/licenses/>.
 ```
 
-More things to be added ;)
+More functions to be added ;)
