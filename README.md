@@ -4,12 +4,15 @@ This application is based on [Darknet DNN framework](https://pjreddie.com/darkne
 
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
+
 **Required System**: Ubuntu-based distributions
+
 **For simulation**, no additional hardware is needed.
-**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [list](https://optee.readthedocs.io/building/devices/index.html) for more info.
+
+**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/building/devices/index.html) for more info.
 
 # Setup
-1) Follow step1 ~ step5 in "Get and build the solution" to build the OP-TEE solution.
+1) Follow **step1** ~ **step5** in "**Get and build the solution**" to build the OP-TEE solution.
 https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
 
