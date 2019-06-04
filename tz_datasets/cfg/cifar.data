@@ -1,6 +1,0 @@
-classes=10
-train  = data/cifar/train.list
-valid  = data/cifar/test.list
-labels = data/cifar/labels.txt
-backup = backup/
-top=2
