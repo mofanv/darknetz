@@ -1,5 +1,18 @@
-This is an application that help to run several layers of a DNN model in TrustZone.
+This is an application that help to run several layers of a Deep Neural Network (DNN) model in TrustZone.
+
+This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and need to be run with [OP-TEE](https://www.op-tee.org/), a open source framework for Arm TrustZone.
 
 # Prerequisites
-This application is based on [OP-TEE](https://www.op-tee.org/), which is a open source 
-1) build a test environment with real TrustZone or simulated TrustZone.
+You can run this application with real TrustZone or a simulated one by using QEMU.
+**Required System**: Ubuntu-based distributions
+**For simulation**, no additional hardware is needed.
+**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [list](https://optee.readthedocs.io/building/devices/index.html) for more info.
+
+# Setup
+1) Follow step1 ~ step5 in "Get and build the solution" to build the OP-TEE solution.
+https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
+
+
+
+
+https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
