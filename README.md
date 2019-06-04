@@ -30,22 +30,37 @@ xtest
 ```
 
 ## (2) Build Darknetp
-1) clone this git
+1) clone codes and datasets
 ```
 git clone -b comunicate https://github.com/mofanv/darknetp.git
+git clone https://github.com/mofanv/tz_datasets.git
 ```
+Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
 
-2)copy datasets to root dir
-cp -a $PATH_darknetp$/tz_datasets/. $PATH_OPTEE$/out-br/target/root/
-rm -rf $PATH_darknetp$/tz_datasets
-
-3) copy Darknetp to example dir
+2) copy Darknetp to example dir
+```
 mkdir $PATH_OPTEE$/optee_examples/darknetp
 cp -a $PATH_darknetp$/. $PATH_OPTEE$/optee_examples/darknetp/
+```
 
+3) copy datasets to root dir
+```
+cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
+```
 
+4) rebuild the OP-TEE
+**For simulation**, to run `make run` again.
+**For read board**, to run `make all` again, and flash the OP-TEE to your device.
 
-$PATH_OPTEE$
+5) after boot your devices or QEMU, to test by command
+```
+darknetp
+```
+You should get the output:
+ ```
+usage: ./darknet <function>
+ ```
+Awesome! You are really to run DNN layers in TrustZone.
 
-
+# Train Models
 
