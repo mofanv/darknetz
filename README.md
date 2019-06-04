@@ -19,7 +19,7 @@ https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
 2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device specific.
 
-**For simulation**: If you have chosen QEMU-v7/v8, to run the bellow command to start QEMU console.
+   **For simulation**: If you have chosen QEMU-v7/v8, to run the bellow command to start QEMU console.
 ```
 make run
 (qemu)c
@@ -32,4 +32,4 @@ xtest
 ```
 
 ## (2) Build Darknetp
-
+clone this 
