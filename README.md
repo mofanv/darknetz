@@ -25,7 +25,7 @@ make run
 (qemu)c
 ```
 
-4) Follow **step8** ~ **step9** to test whether OP-TEE works or not. Run:
+3) Follow **step8** ~ **step9** to test whether OP-TEE works or not. Run:
 ```
 tee-supplicant -d
 xtest
