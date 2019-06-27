@@ -23,6 +23,7 @@
 #define UPDATE_CMD 12
 #define NET_TRUTH_CMD 13
 #define CALC_LOSS_CMD 14
+#define TRANS_WEI_CMD 15
 
 #define TA_DARKNETP_UUID \
 	{ 0x7fc5c039, 0x0542, 0x4ee1, \
@@ -65,5 +66,7 @@ void update_network_CA(update_args a);
 void net_truth_CA(float *net_truth, int net_truths, int net_batch);
 
 void calc_network_loss_CA(int n, int batch);
+
+void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional);
 
 #endif

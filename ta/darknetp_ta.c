@@ -15,6 +15,7 @@
 #include "activations_TA.h"
 #include "darknet_TA.h"
 #include "diffprivate_TA.h"
+#include "parser_TA.h"
 
 #define LOOKUP_SIZE 4096
 
@@ -352,6 +353,34 @@ static TEE_Result make_cost_layer_TA_params(uint32_t param_types,
 }
 
 
+static TEE_Result transfer_weights_TA_params(uint32_t param_types,
+                                             TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                               TEE_PARAM_TYPE_MEMREF_INPUT,
+                                               TEE_PARAM_TYPE_VALUE_INPUT,
+                                               TEE_PARAM_TYPE_NONE);
+    
+    //DMSG("has been called");
+    
+    if (param_types != exp_param_types)
+        return TEE_ERROR_BAD_PARAMETERS;
+    
+    float *vec = params[0].memref.buffer;
+    
+    int *params1 = params[1].memref.buffer;
+    int length = params1[0];
+    int layer_i = params1[1];
+    int additional = params1[2];
+    
+    char type = params[2].value.a;
+    
+    load_weights_TA(vec, length, layer_i, type, additional);
+    
+    return TEE_SUCCESS;
+}
+
+
 static TEE_Result forward_network_TA_params(uint32_t param_types,
                                           TEE_Param params[4])
 {
@@ -543,6 +572,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case MAKE_COST_CMD:
         return make_cost_layer_TA_params(param_types, params);
+            
+        case TRANS_WEI_CMD:
+        return transfer_weights_TA_params(param_types, params);
 
         case FORWARD_CMD:
         return forward_network_TA_params(param_types, params);
