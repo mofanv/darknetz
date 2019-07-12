@@ -83,7 +83,7 @@ void forward_network_TA()
             netta.truth = l.output;
         }
         //output of the network (for predict)
-        if(l.type == COST){
+        if(l.type == COST_TA){
             ta_net_output = malloc(sizeof(float)*l.outputs*l.batch);
             for(int z=0; z<l.outputs*l.batch; z++){
                 ta_net_output[z] = l.output[z];
