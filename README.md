@@ -53,7 +53,7 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For simulation**, to run `make run` again.
 
-**For read board**, to run `make all` again, and flash the OP-TEE to your device.
+**For real boards**, to run `make all` again, and flash the OP-TEE to your device.
 
 5) after boot your devices or QEMU, to test by the command
 ```
@@ -63,7 +63,7 @@ You should get the output:
  ```
 # usage: ./darknet <function>
  ```
-Awesome! You are really to run DNN layers in TrustZone.
+Awesome! You are ready to run DNN layers in TrustZone.
 
 # Train Models
 
