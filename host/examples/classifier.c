@@ -675,6 +675,14 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
             //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
+        getrusage(RUSAGE_SELF, &usage);
+        endu = usage.ru_utime;
+        ends = usage.ru_stime;
+        printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
+        printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
+        printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
+        getMemory();
+        
         if(r.data != im.data) free_image(r);
         free_image(im);
         if (filename) break;

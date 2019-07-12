@@ -35,6 +35,7 @@ extern TEEC_Session sess;
 
 extern float *net_input_back;
 extern float *net_delta_back;
+extern float *net_output_back;
 
 void debug_plot(char *filename, int num, float *tobeplot, int length);
 
