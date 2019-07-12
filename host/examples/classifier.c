@@ -1,4 +1,5 @@
 #include "darknet.h"
+#include "main.h"
 #include "parser.h"
 
 #include <sys/time.h>
@@ -664,6 +665,9 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         float *predictions = network_predict(net, X);
         if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
         top_k(predictions, net->outputs, top, indexes);
+        
+        free(net_output_back);
+        
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];

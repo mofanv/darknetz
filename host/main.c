@@ -18,6 +18,7 @@ TEEC_SharedMemory workspaceSM;
 
 float *net_input_back;
 float *net_delta_back;
+float *net_output_back;
 int sysCount = 0;
 
 
@@ -642,6 +643,30 @@ void calc_network_loss_CA(int n, int batch)
     if (res != TEEC_SUCCESS)
     errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
          res, origin);
+}
+
+void net_output_return_CA(int net_outputs, int net_batch)
+{
+    //invoke op and transfer paramters
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+    
+    net_output_back = malloc(sizeof(float) * net_outputs * net_batch);
+    
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT,
+                                     TEEC_NONE,
+                                     TEEC_NONE, TEEC_NONE);
+    
+    op.params[0].tmpref.buffer = net_output_back;
+    op.params[0].tmpref.size = sizeof(float) * net_outputs * net_batch;
+    
+    res = TEEC_InvokeCommand(&sess, OUTPUT_RETURN_CMD,
+                             &op, &origin);
+    if (res != TEEC_SUCCESS)
+        errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
+             res, origin);
 }
 
 

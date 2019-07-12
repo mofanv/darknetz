@@ -619,7 +619,12 @@ float *network_predict(network *net, float *input)
     net->train = 0;
     net->delta = 0;
     forward_network(net);
-    float *out = net->output;
+    
+     #float *out = net->output;
+     # call TA to return output
+    backward_network_CA_addidion(net->outputs, net->batch);
+    float *out = net_output_back;
+    
     *net = orig;
     return out;
 }

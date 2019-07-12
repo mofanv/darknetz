@@ -541,6 +541,28 @@ static TEE_Result calc_network_loss_TA_params(uint32_t param_types,
     return TEE_SUCCESS;
 }
 
+static TEE_Result net_output_return_TA_params(uint32_t param_types,
+                                              TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE);
+    
+    if (param_types != exp_param_types)
+        return TEE_ERROR_BAD_PARAMETERS;
+    
+    float *params = params[0].memref.buffer;
+    int buffersize = params[0].memref.size / sizeof(float);
+    for(int z=0; z<buffersize; z++){
+        params[z] = ta_net_output[z];
+    }
+    
+    free(ta_net_output);
+    
+    return TEE_SUCCESS;
+    
+}
 
 TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
                                       uint32_t cmd_id,
@@ -594,6 +616,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
         case CALC_LOSS_CMD:
         return calc_network_loss_TA_params(param_types, params);
 
+        case OUTPUT_RETURN_CMD:
+        return net_output_return_TA_params(param_types, params);
+            
         default:
         return TEE_ERROR_BAD_PARAMETERS;
     }
