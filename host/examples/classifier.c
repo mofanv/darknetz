@@ -668,6 +668,13 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         
         free(net_output_back);
         
+        struct rusage usage;
+        struct timeval startu, endu, starts, ends;
+        
+        getrusage(RUSAGE_SELF, &usage);
+        startu = usage.ru_utime;
+        starts = usage.ru_stime;
+        
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
