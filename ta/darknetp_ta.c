@@ -16,6 +16,7 @@
 #include "darknet_TA.h"
 #include "diffprivate_TA.h"
 #include "parser_TA.h"
+#include "math_TA.h"
 
 #define LOOKUP_SIZE 4096
 
@@ -560,10 +561,14 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     
     
     for(int i=0; i<10;i++){
-        IMSG("t_ %d, %f\n", i, ta_net_output[i]);
-        IMSG("p_ %d, %f\n", i, params0[i]);
+        char[10] = char0;
+        ftoa(ta_net_output[i], char0, 5);
+        IMSG("t_ %d, %s\n", i, char0);
+        ftoa(params0[i], char0, 5);
+        IMSG("p_ %d, %f\n", i, char0);
     }
     IMSG("size = %d\n", buffersize);
+    
     
     
     free(ta_net_output);
