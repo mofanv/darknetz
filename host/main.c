@@ -669,6 +669,7 @@ void net_output_return_CA(int net_outputs, int net_batch)
     
     for(int i=0; i<10;i++){
         printf("__ %d, %f\n", i, tem[i]);
+        printf("output_size=%d\n", net_outputs);
     }
     
     
