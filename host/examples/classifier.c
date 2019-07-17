@@ -1173,6 +1173,7 @@ void run_classifier(int argc, char **argv)
     if(0==strcmp(argv[2], "predict")) {
         predict_classifier(data, cfg, weights, filename, top);
         state = 'p';
+        printf("1state=%c \n", state);
     }
     else if(0==strcmp(argv[2], "fout")) file_output_classifier(data, cfg, weights, filename);
     else if(0==strcmp(argv[2], "try")) try_classifier(data, cfg, weights, filename, atoi(layer_s));
