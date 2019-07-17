@@ -20,7 +20,7 @@ float *net_input_back;
 float *net_delta_back;
 float *net_output_back;
 int sysCount = 0;
-
+char state;
 
 void debug_plot(char *filename, int num, float *tobeplot, int length)
 {

@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char state;
+
 void getMemory() {
     
     // stores each word in status file
@@ -1170,7 +1172,10 @@ void run_classifier(int argc, char **argv)
     char *filename = (argc > 6) ? argv[6]: 0;
     char *layer_s = (argc > 7) ? argv[7]: 0;
     int layer = layer_s ? atoi(layer_s) : -1;
-    if(0==strcmp(argv[2], "predict")) predict_classifier(data, cfg, weights, filename, top);
+    if(0==strcmp(argv[2], "predict")) {
+        predict_classifier(data, cfg, weights, filename, top);
+        state = 'p';
+    }
     else if(0==strcmp(argv[2], "fout")) file_output_classifier(data, cfg, weights, filename);
     else if(0==strcmp(argv[2], "try")) try_classifier(data, cfg, weights, filename, atoi(layer_s));
     else if(0==strcmp(argv[2], "train")) train_classifier(data, cfg, weights, gpus, ngpus, clear);
