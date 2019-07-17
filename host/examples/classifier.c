@@ -661,7 +661,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
-        for(i=0; i<100000; i++){
+        for(i=0; i<10000; i++){
             printf("%d, %f\n", i, X[i]);
         }
         
