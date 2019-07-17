@@ -542,6 +542,7 @@ static TEE_Result calc_network_loss_TA_params(uint32_t param_types,
     return TEE_SUCCESS;
 }
 
+
 static TEE_Result net_output_return_TA_params(uint32_t param_types,
                                               TEE_Param params[4])
 {
@@ -555,6 +556,17 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     
     float *params0 = params[0].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
+    
+    // remove confidence scores
+    float * rm_conf[buffersize];
+    float maxconf; maxconf = -0.1;
+    for(int z=0; z<buffersize; z++){
+        if(ta_net_output[z] > maxconf){maxconf = z;}
+        ta_net_output[z] = 0.0f;
+    }
+    ta_net_output[maxconf] = 1.0f;
+    
+    
     for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_output[z];
     }

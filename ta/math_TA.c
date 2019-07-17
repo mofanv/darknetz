@@ -7,6 +7,21 @@
 #include <tee_internal_api.h>
 #include <tee_internal_api_extensions.h>
 
+
+float ta_max(float a, float b)
+{
+    float m;
+    m = 0;
+    if(a > b){
+        m = a;
+    }else
+    {
+        m = b;
+    }
+    return m;
+}
+
+
 double ta_pow(double a, int n)
 {
     if(n<0) return 1/ta_pow(a,-n);

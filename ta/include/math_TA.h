@@ -10,6 +10,7 @@
 
 #define fabs(a) ((a)>0?(a):(-(a)))
 
+float ta_max(float a, float b);
 double ta_pow(double a,int n);
 double ta_eee(double x);
 double ta_exp(double x);
