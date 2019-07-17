@@ -61,6 +61,18 @@ void forward_softmax_layer_TA(const softmax_layer_TA l, network_TA net)
         softmax_x_ent_cpu_TA(l.batch*l.inputs, l.output, net.truth, l.delta, l.loss);
         l.cost[0] = sum_array_TA(l.loss, l.batch*l.inputs);
     }
+    
+    for(int i=0; i<10;i++){
+        char char0[10];
+        ftoa(l.loss[i], char0, 5);
+        IMSG("sl_ %d, %s\n", i, char0);
+    }
+    
+    for(int i=0; i<10;i++){
+        char char0[10];
+        ftoa(l.output[i], char0, 5);
+        IMSG("so_ %d, %s\n", i, char0);
+    }
 }
 
 

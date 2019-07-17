@@ -93,7 +93,7 @@ void forward_cost_layer_TA(cost_layer_TA l, network_TA net)
     for(int i=0; i<10;i++){
         char char0[10];
         ftoa(l.output[i], char0, 5);
-        IMSG("l_ %d, %s\n", i, char0);
+        IMSG("c_ %d, %s\n", i, char0);
     }
 }
 
