@@ -662,10 +662,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 
         float *X = r.data;
         for(i=0; i<100000; i++){
-            printf(i);
-            printf(", ");
-            printf(X[i]);
-            printf("\n");
+            printf("%d, %f\n", i, X[i]);
         }
         
         time=clock();
