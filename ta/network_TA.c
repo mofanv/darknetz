@@ -89,6 +89,18 @@ void forward_network_TA()
                 ta_net_output[z] = l.output[z];
             }
         }
+        
+        
+        for(int i=0; i<10;i++){
+            char char0[10];
+            ftoa(l.output[i], char0, 5);
+            IMSG("l_ %d, %s\n", i, char0);
+            char char1[10];
+            ftoa(ta_net_output[i], char1, 5);
+            IMSG("t_ %d, %f\n", i, char1);
+        }
+        IMSG("size = %d\n", l.outputs);
+        
     }
 
     calc_network_cost_TA();

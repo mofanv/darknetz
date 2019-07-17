@@ -559,18 +559,6 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
         params0[z] = ta_net_output[z];
     }
     
-    
-    for(int i=0; i<10;i++){
-        char char0[10];
-        ftoa(ta_net_output[i], char0, 5);
-        IMSG("t_ %d, %s\n", i, char0);
-        ftoa(params0[i], char0, 5);
-        IMSG("p_ %d, %f\n", i, char0);
-    }
-    IMSG("size = %d\n", buffersize);
-    
-    
-    
     free(ta_net_output);
     
     return TEE_SUCCESS;
