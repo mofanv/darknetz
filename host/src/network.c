@@ -624,7 +624,7 @@ float *network_predict(network *net, float *input)
     //call TA to return output
     net_output_return_CA(net->outputs, 1);
     for(int i=0; i<10;i++){
-        print(net_output_back[i]);
+        printf(net_output_back[i]);
     }
     
     float *out = net_output_back;
