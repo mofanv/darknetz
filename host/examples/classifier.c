@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char state;
-
 void getMemory() {
     
     // stores each word in status file
