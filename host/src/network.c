@@ -622,7 +622,7 @@ float *network_predict(network *net, float *input)
     
     //float *out = net->output;
     //call TA to return output
-    backward_network_CA_addidion(net->outputs, 1);
+    net_output_return_CA(net->outputs, 1);
     float *out = net_output_back;
     
     *net = orig;
