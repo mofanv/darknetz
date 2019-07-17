@@ -1171,6 +1171,7 @@ void run_classifier(int argc, char **argv)
     char *layer_s = (argc > 7) ? argv[7]: 0;
     int layer = layer_s ? atoi(layer_s) : -1;
     if(0==strcmp(argv[2], "predict")) {
+        printf("------------777777-------------");
         predict_classifier(data, cfg, weights, filename, top);
         state = 'p';
         printf("1state=%c \n", state);
