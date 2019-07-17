@@ -658,6 +658,9 @@ void net_output_return_CA(int net_outputs, int net_batch)
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT,
                                      TEEC_NONE,
                                      TEEC_NONE, TEEC_NONE);
+    for(int i=0; i<10;i++){
+        printf("__ %d, %f\n", i, op.params[0].tmpref.buffer[i]);
+    }
     
     op.params[0].tmpref.buffer = net_output_back;
     op.params[0].tmpref.size = sizeof(float) * net_outputs * net_batch;
