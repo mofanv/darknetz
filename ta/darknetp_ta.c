@@ -551,12 +551,20 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     
     if (param_types != exp_param_types)
         return TEE_ERROR_BAD_PARAMETERS;
-    
+
     float *params0 = params[0].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
     for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_output[z];
     }
+    
+    
+    for(int i=0; i<10;i++){
+        IMSG("t_ %d, %f\n", i, ta_net_output[i]);
+        IMSG("p_ %d, %f\n", i, params0[i]);
+    }
+    IMSG("size = %d\n", i, buffersize);
+    
     
     free(ta_net_output);
     

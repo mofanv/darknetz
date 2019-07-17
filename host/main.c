@@ -667,12 +667,6 @@ void net_output_return_CA(int net_outputs, int net_batch)
     
     float *tem = op.params[0].tmpref.buffer;
     
-    for(int i=0; i<10;i++){
-        printf("__ %d, %f\n", i, tem[i]);
-        printf("output_size=%d\n", net_outputs);
-    }
-    
-    
     if (res != TEEC_SUCCESS)
         errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
              res, origin);
