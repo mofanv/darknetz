@@ -661,6 +661,13 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
+        for(i=0; i<100000; i++){
+            printf(i);
+            printf(', ');
+            printf(X[i]);
+            printf('\n');
+        }
+        
         time=clock();
         float *predictions = network_predict(net, X);
         if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
