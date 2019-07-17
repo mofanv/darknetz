@@ -696,10 +696,8 @@ learning_rate_policy get_policy(char *s)
 void parse_net_options(list *options, network *net)
 {
     net->batch = option_find_int(options, "batch", 1);
-    printf("state=%c \n", state);
     if(state == 'p'){
         net->batch = 1;
-        printf("batch=%d \n", net->batch);
     }
     net->learning_rate = option_find_float(options, "learning_rate", .001);
     net->momentum = option_find_float(options, "momentum", .9);
