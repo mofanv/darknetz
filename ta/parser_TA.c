@@ -31,29 +31,9 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
 
     if(type == 'b'){
         copy_cpu_TA(length, vec, 1, l.biases, 1);
-        
-        for(int z=0; z<length; z++){
-            char char0[20];
-            ftoa(vec[z], char0, 5);
-            IMSG("z=%d, b=%s || ", z, char0);
-            
-            char char1[20];
-            ftoa(l.biases[z], char1, 5);
-            IMSG("z=%d, b=%s || ", z, char1);
-        }
     }
     else if(type == 'w'){
         copy_cpu_TA(length, vec, 1, l.weights, 1);
-        
-        for(int z=0; z<length; z++){
-            char char0[20];
-            ftoa(vec[z], char0, 5);
-            IMSG("z=%d, w=%s || ", z, char0);
-            
-            char char1[20];
-            ftoa(l.weights[z], char1, 5);
-            IMSG("z=%d, w=%s || ", z, char1);
-        }
     }
     else if(type == 's'){
         copy_cpu_TA(length, vec, 1, l.scales, 1);
