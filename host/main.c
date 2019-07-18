@@ -405,6 +405,12 @@ void transfer_weights_CA(float *vec, int length, int layer_i, char type, int add
     uint32_t origin;
     TEEC_Result res;
     
+    for(int z=0; z<length; z++){
+        printf("z=%d, v=%f || ", z, vec[z]);
+    }
+    printf("---------------------------------\n");
+    printf("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
+    
     int passint[3];
     passint[0] = length;
     passint[1] = layer_i;

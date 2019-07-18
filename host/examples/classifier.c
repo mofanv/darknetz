@@ -628,17 +628,7 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
-    
-    printf("--------------");
-    printf("batch=%d\n",net->batch);
-    printf("--------------");
-    
     set_batch_network(net, 1);
-    
-    printf("--------------");
-    printf("batch=%d\n",net->batch);
-    printf("--------------");
-    
     
     srand(2222222);
 
