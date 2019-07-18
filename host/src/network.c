@@ -620,11 +620,16 @@ float *network_predict(network *net, float *input)
     net->delta = 0;
     forward_network(net);
     
-    //float *out = net->output;
-    //call TA to return output
-    net_output_return_CA(net->outputs, 1);
+    float *out;
     
-    float *out = net_output_back;
+    if(count_global == (partition_point+1)){
+        print("all=%d, p=%d \n", count_global, partition_point);
+        out = net->output;
+    }else{
+        //call TA to return output
+        net_output_return_CA(net->outputs, 1);
+        out = net_output_back;
+    }
     
     *net = orig;
     return out;
