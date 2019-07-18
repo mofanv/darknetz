@@ -147,6 +147,11 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 
     int count = 0;
     int epoch = (*net->seen)/N;
+    
+    printf("---------------");
+    printf("get_current_batch(net)=%d \n", get_current_batch(net));
+    printf("net->max_batches=%d \n", net->max_batches);
+    
     while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
         if(net->random && count++%40 == 0){
             printf("Resizing\n");
