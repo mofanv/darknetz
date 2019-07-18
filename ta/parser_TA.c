@@ -7,7 +7,7 @@
 #include "network_TA.h"
 #include <parser_TA.h>
 #include <blas_TA.h>
-#include "math.h"
+#include "math_TA.h"
 
 
 
