@@ -381,8 +381,8 @@ static TEE_Result transfer_weights_TA_params(uint32_t param_types,
     //    ftoa(vec[z], char0, 5);
     //    IMSG("z=%d, v=%s || ", z, char0);
     //}
-    IMSG("---------------------------------\n");
-    IMSG("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
+    //IMSG("---------------------------------\n");
+    //IMSG("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
     
     
     load_weights_TA(vec, length, layer_i, type, additional);

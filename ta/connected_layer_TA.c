@@ -17,13 +17,6 @@
 
 void forward_connected_layer_TA_new(layer_TA l, network_TA net)
 {
-    
-    for(int z=0; z<l.outputs; z++){
-        char char0[20];
-        ftoa(l.biases[z], char0, 6);
-        IMSG("z=%d, b=%s || ", z, char0);
-    }
-    
     fill_cpu_TA(l.outputs*l.batch, 0, l.output, 1);
 
     int m = l.batch;
