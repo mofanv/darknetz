@@ -622,7 +622,6 @@ float *network_predict(network *net, float *input)
     
     float *out;
     
-    printf("all=%d, p=%d \n", count_global, partition_point);
     if(count_global == (partition_point+2)){
         out = net->output;
     }else{
