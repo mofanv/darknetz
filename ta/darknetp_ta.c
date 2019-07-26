@@ -376,17 +376,40 @@ static TEE_Result transfer_weights_TA_params(uint32_t param_types,
     
     char type = params[2].value.a;
     
-    //for(int z=0; z<length; z++){
-    //    char char0[20];
-    //    ftoa(vec[z], char0, 5);
-    //    IMSG("z=%d, v=%s || ", z, char0);
-    //}
-    //IMSG("---------------------------------\n");
-    //IMSG("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
-    
-    
     load_weights_TA(vec, length, layer_i, type, additional);
     
+    return TEE_SUCCESS;
+}
+
+static TEE_Result save_weights_TA_params(uint32_t param_types,
+                                             TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_MEMREF_INPUT,
+                                               TEE_PARAM_TYPE_VALUE_INPUT,
+                                               TEE_PARAM_TYPE_NONE);
+    
+    //DMSG("has been called");
+    
+    if (param_types != exp_param_types)
+        return TEE_ERROR_BAD_PARAMETERS;
+    
+    float *vec = params[0].memref.buffer;
+    
+    int *params1 = params[1].memref.buffer;
+    int length = params1[0];
+    int layer_i = params1[1];
+    
+    char type = params[2].value.a;
+    
+    float *weights_encrypted = malloc(sizeof(float)*length);
+    save_weights_TA(weights_encrypted, length, layer_i, type);
+    
+    for(int z=0; z<length; z++){
+        vec[z] = weights_encrypted[z];
+    }
+    
+    free(weights_encrypted);
     return TEE_SUCCESS;
 }
 
@@ -623,6 +646,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
             
         case TRANS_WEI_CMD:
         return transfer_weights_TA_params(param_types, params);
+            
+        case SAVE_WEI_CMD:
+            return save_weights_TA_params(param_types, params);
 
         case FORWARD_CMD:
         return forward_network_TA_params(param_types, params);
@@ -644,6 +670,8 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case OUTPUT_RETURN_CMD:
         return net_output_return_TA_params(param_types, params);
+        
+
             
         default:
         return TEE_ERROR_BAD_PARAMETERS;

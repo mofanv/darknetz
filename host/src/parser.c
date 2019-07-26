@@ -1032,6 +1032,18 @@ void save_convolutional_weights(layer l, FILE *fp)
     fwrite(l.weights, sizeof(float), num, fp);
 }
 
+void save_convolutional_weights_comm(layer l, int i)
+{
+    int num = l.nweights;
+    save_weights_CA(l.biases, l.n, i, 'b');
+    if (l.batch_normalize){
+        save_weights_CA(l.scales, l.n, i, 's');
+        save_weights_CA(l.rolling_mean, l.n, i, 'm');
+        save_weights_CA(l.rolling_variance, l.n, i, 'v');
+    }
+    save_weights_CA(l.weights, num, i, 'w');
+}
+
 void save_batchnorm_weights(layer l, FILE *fp)
 {
 #ifdef GPU
@@ -1042,6 +1054,13 @@ void save_batchnorm_weights(layer l, FILE *fp)
     fwrite(l.scales, sizeof(float), l.c, fp);
     fwrite(l.rolling_mean, sizeof(float), l.c, fp);
     fwrite(l.rolling_variance, sizeof(float), l.c, fp);
+}
+
+void save_batchnorm_weights_comm(layer l, int i)
+{
+    save_weights_CA(l.scales, l.c, i, 's');
+    save_weights_CA(l.rolling_mean, l.c, i, 'm');
+    save_weights_CA(l.rolling_variance, l.c, i, 'v');
 }
 
 void save_connected_weights(layer l, FILE *fp)
@@ -1057,6 +1076,18 @@ void save_connected_weights(layer l, FILE *fp)
         fwrite(l.scales, sizeof(float), l.outputs, fp);
         fwrite(l.rolling_mean, sizeof(float), l.outputs, fp);
         fwrite(l.rolling_variance, sizeof(float), l.outputs, fp);
+    }
+}
+
+void save_connected_weights_comm(layer l, int i)
+{
+    int num = l.nweights;
+    save_weights_CA(l.biases, l.outputs, i, 'b');
+    save_weights_CA(l.weights, l.outputs*l.inputs, i, 'w');
+    if (l.batch_normalize){
+        save_weights_CA(l.scales, l.outputs, i, 's');
+        save_weights_CA(l.rolling_mean, l.outputs, i, 'm');
+        save_weights_CA(l.rolling_variance, l.outputs, i, 'v');
     }
 }
 
@@ -1083,6 +1114,42 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     for(i = 0; i < net->n && i < cutoff; ++i){
         layer l = net->layers[i];
         if (l.dontsave) continue;
+        
+        if(i > partition_point){
+            int layerTA_i = i - partition_point - 1;
+            if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+                save_convolutional_weights_comm(l, layerTA_i);
+            } if(l.type == CONNECTED){
+                save_connected_weights_comm(l, layerTA_i);
+            } if(l.type == BATCHNORM){
+                save_batchnorm_weights_comm(l, layerTA_i);
+            } if(l.type == RNN){
+                save_connected_weights_comm(*(l.input_layer), layerTA_i);
+                save_connected_weights_comm(*(l.self_layer), layerTA_i);
+                save_connected_weights_comm(*(l.output_layer), layerTA_i);
+            } if (l.type == LSTM) {
+                save_connected_weights_comm(*(l.wi), layerTA_i);
+                save_connected_weights_comm(*(l.wf), layerTA_i);
+                save_connected_weights_comm(*(l.wo), layerTA_i);
+                save_connected_weights_comm(*(l.wg), layerTA_i);
+                save_connected_weights_comm(*(l.ui), layerTA_i);
+                save_connected_weights_comm(*(l.uf), layerTA_i);
+                save_connected_weights_comm(*(l.uo), layerTA_i);
+                save_connected_weights_comm(*(l.ug), layerTA_i);
+            } if (l.type == GRU) {
+                save_connected_weights_comm(*(l.wz), layerTA_i);
+                save_connected_weights_comm(*(l.wr), layerTA_i);
+                save_connected_weights_comm(*(l.wh), layerTA_i);
+                save_connected_weights_comm(*(l.uz), layerTA_i);
+                save_connected_weights_comm(*(l.ur), layerTA_i);
+                save_connected_weights_comm(*(l.uh), layerTA_i);
+            } if(l.type == CRNN){
+                save_convolutional_weights_comm(*(l.input_layer), layerTA_i);
+                save_convolutional_weights_comm(*(l.self_layer), layerTA_i);
+                save_convolutional_weights_comm(*(l.output_layer), layerTA_i);
+            }
+        }
+
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
             save_convolutional_weights(l, fp);
         } if(l.type == CONNECTED){
@@ -1130,9 +1197,12 @@ void save_weights_upto(network *net, char *filename, int cutoff)
             fwrite(l.biases, sizeof(float), l.outputs, fp);
             fwrite(l.weights, sizeof(float), size, fp);
         }
+
     }
     fclose(fp);
 }
+
+
 void save_weights(network *net, char *filename)
 {
     save_weights_upto(net, filename, net->n);

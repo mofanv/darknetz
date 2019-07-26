@@ -2,6 +2,11 @@ This is an application that runs several layers of a Deep Neural Network (DNN) m
 
 This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and needs to be run with [OP-TEE](https://www.op-tee.org/), an open source framework for Arm TrustZone.
 
+---------------------------
+Please consider citing this corresponding paper if this project is helpful to you:
+
+**[Towards Characterizing and Limiting Information Exposure in DNN Layers](https://arxiv.org/abs/1907.06034)** Fan Mo, Ali Shahin Shamsabadi, Kleomenis Katevas, Andrea Cavallaro, Hamed Haddadi
+
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
 
@@ -16,7 +21,7 @@ You can run this application with real TrustZone or a simulated one by using QEM
 1) Follow **step1** ~ **step5** in "**Get and build the solution**" to build the OP-TEE solution.
 https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
 
-2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device specific.
+2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device-specific.
 
    **For simulation**: If you have chosen QEMU-v7/v8, to run the below command to start QEMU console.
 ```
@@ -33,7 +38,7 @@ xtest
 ## (2) Build Darknetp
 1) clone codes and datasets
 ```
-git clone -b comunicate https://github.com/mofanv/darknetp.git
+git clone -b communicate https://github.com/mofanv/darknetp.git
 git clone https://github.com/mofanv/tz_datasets.git
 ```
 Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
@@ -111,10 +116,30 @@ Layers with `_TA` are running in the TrustZone. The training loss is calculated 
 
 2) To use pre-trained models
 
-You can also load a pre-trained model into both Normal World and Trusted World and then fine-tune the model, by commands:
+You can also load a pre-trained model into both Normal World and Secure World and then fine-tune the model, by commands:
 ```
 darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights
 ```
+
+(Note: the Secure World only accepts a model that has been trained using the same `-pp` value, since layers are encrypted when they are transferred back to save and layers will be decrypted when deploying into the Trustzone)
+
+# Inference
+
+By simply typing the following command, you can do inference using a pre-trained model.
+```
+darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
+```
+For defending potential attacks (e.g. membership inference), the cost function is always in the TEE. Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
+
+```
+100.00%: 3
+ 0.00%: 1
+ 0.00%: 2
+ 0.00%: 0
+ 0.00%: 4
+```
+
+More functions to be added ;)
 
 # License
 ```
@@ -140,5 +165,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-More functions to be added ;)
