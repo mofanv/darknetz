@@ -1032,6 +1032,18 @@ void save_convolutional_weights(layer l, FILE *fp)
     fwrite(l.weights, sizeof(float), num, fp);
 }
 
+void save_convolutional_weights_comm(layer l, int i)
+{
+    int num = l.nweights;
+    save_weights_CA(l.biases, l.n, i, 'b');
+    if (l.batch_normalize){
+        save_weights_CA(l.scales, l.n, i, 's');
+        save_weights_CA(l.rolling_mean, l.n, i, 'm');
+        save_weights_CA(l.rolling_variance, l.n, i, 'v');
+    }
+    save_weights_CA(l.weights, num, i, 'w');
+}
+
 void save_batchnorm_weights(layer l, FILE *fp)
 {
 #ifdef GPU
@@ -1042,6 +1054,13 @@ void save_batchnorm_weights(layer l, FILE *fp)
     fwrite(l.scales, sizeof(float), l.c, fp);
     fwrite(l.rolling_mean, sizeof(float), l.c, fp);
     fwrite(l.rolling_variance, sizeof(float), l.c, fp);
+}
+
+void save_batchnorm_weights_comm(layer l, int i)
+{
+    save_weights_CA(l.scales, l.c, i, 's');
+    save_weights_CA(l.rolling_mean, l.c, i, 'm');
+    save_weights_CA(l.rolling_variance, l.c, i, 'v');
 }
 
 void save_connected_weights(layer l, FILE *fp)
@@ -1057,6 +1076,18 @@ void save_connected_weights(layer l, FILE *fp)
         fwrite(l.scales, sizeof(float), l.outputs, fp);
         fwrite(l.rolling_mean, sizeof(float), l.outputs, fp);
         fwrite(l.rolling_variance, sizeof(float), l.outputs, fp);
+    }
+}
+
+void save_connected_weights_comm(layer l, int i)
+{
+    int num = l.nweights;
+    save_weights_CA(l.biases, l.outputs, i, 'b');
+    save_weights_CA(l.weights, l.outputs*l.inputs, i, 'w');
+    if (l.batch_normalize){
+        save_weights_CA(l.scales, l.outputs, i, 's');
+        save_weights_CA(l.rolling_mean, l.outputs, i, 'm');
+        save_weights_CA(l.rolling_variance, l.outputs, i, 'v');
     }
 }
 
@@ -1082,6 +1113,46 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     int i;
     for(i = 0; i < net->n && i < cutoff; ++i){
         layer l = net->layers[i];
+        
+        if(i <= partition_point){
+            //doing nothing
+        }// load encrypted weights from the SW side
+        else{
+            if (l.dontsave) continue;
+            if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+                save_convolutional_weights_comm(l, fp);
+            } if(l.type == CONNECTED){
+                save_connected_weights_comm(l, fp);
+            } if(l.type == BATCHNORM){
+                save_batchnorm_weights_comm(l, fp);
+            } if(l.type == RNN){
+                save_connected_weights_comm(*(l.input_layer), fp);
+                save_connected_weights_comm(*(l.self_layer), fp);
+                save_connected_weights_comm(*(l.output_layer), fp);
+            } if (l.type == LSTM) {
+                save_connected_weights_comm(*(l.wi), fp);
+                save_connected_weights_comm(*(l.wf), fp);
+                save_connected_weights_comm(*(l.wo), fp);
+                save_connected_weights_comm(*(l.wg), fp);
+                save_connected_weights_comm(*(l.ui), fp);
+                save_connected_weights_comm(*(l.uf), fp);
+                save_connected_weights_comm(*(l.uo), fp);
+                save_connected_weights_comm(*(l.ug), fp);
+            } if (l.type == GRU) {
+                save_connected_weights_comm(*(l.wz), fp);
+                save_connected_weights_comm(*(l.wr), fp);
+                save_connected_weights_comm(*(l.wh), fp);
+                save_connected_weights_comm(*(l.uz), fp);
+                save_connected_weights_comm(*(l.ur), fp);
+                save_connected_weights_comm(*(l.uh), fp);
+                }
+            }  if(l.type == CRNN){
+                save_convolutional_weights_comm(*(l.input_layer), fp);
+                save_convolutional_weights_comm(*(l.self_layer), fp);
+                save_convolutional_weights_comm(*(l.output_layer), fp);
+            }
+        }
+
         if (l.dontsave) continue;
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
             save_convolutional_weights(l, fp);
@@ -1130,6 +1201,7 @@ void save_weights_upto(network *net, char *filename, int cutoff)
             fwrite(l.biases, sizeof(float), l.outputs, fp);
             fwrite(l.weights, sizeof(float), size, fp);
         }
+
     }
     fclose(fp);
 }

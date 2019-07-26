@@ -405,12 +405,6 @@ void transfer_weights_CA(float *vec, int length, int layer_i, char type, int add
     uint32_t origin;
     TEEC_Result res;
     
-    //for(int z=0; z<length; z++){
-    //    printf("z=%d, v=%f || ", z, vec[z]);
-    //}
-    //printf("---------------------------------\n");
-    //printf("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
-    
     int passint[3];
     passint[0] = length;
     passint[1] = layer_i;
@@ -434,6 +428,42 @@ void transfer_weights_CA(float *vec, int length, int layer_i, char type, int add
              res, origin);
 }
 
+void save_weights_CA(float *vec, int length, int layer_i, char type)
+{
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+    
+    int passint[2];
+    passint[0] = length;
+    passint[1] = layer_i;
+    
+    float *weights_back = malloc(sizeof(float) * length);
+    
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT, TEEC_NONE);
+    
+    op.params[0].tmpref.buffer = weights_back;
+    op.params[0].tmpref.size = sizeof(float) * length;
+    
+    op.params[1].tmpref.buffer = passint;
+    op.params[1].tmpref.size = sizeof(passint);
+    
+    op.params[2].value.a = type;
+    
+    res = TEEC_InvokeCommand(&sess, SAVE_WEI_CMD,
+                             &op, &origin);
+    
+    for(int z=0; z<length; z++){
+         vec[z] = weights_back[z];
+    }
+    
+    free(weights_back);
+    
+    if (res != TEEC_SUCCESS)
+        errx(1, "TEEC_InvokeCommand(SAVE_WEI) failed 0x%x origin 0x%x",
+             res, origin);
+}
 
 void forward_network_CA(float *net_input, int l_inputs, int net_batch, int net_train)
 {
@@ -674,7 +704,7 @@ void net_output_return_CA(int net_outputs, int net_batch)
     float *tem = op.params[0].tmpref.buffer;
     
     if (res != TEEC_SUCCESS)
-        errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
+        errx(1, "TEEC_InvokeCommand(return) failed 0x%x origin 0x%x",
              res, origin);
 }
 

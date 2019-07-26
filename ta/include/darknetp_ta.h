@@ -31,6 +31,7 @@ extern float *netta_truth;
 #define CALC_LOSS_CMD 14
 #define TRANS_WEI_CMD 15
 #define OUTPUT_RETURN_CMD 16
+#define SAVE_WEI_CMD 17
 
 
 #endif /*TA_DARKNETP_H*/
