@@ -1113,47 +1113,42 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     int i;
     for(i = 0; i < net->n && i < cutoff; ++i){
         layer l = net->layers[i];
+        if (l.dontsave) continue;
         
-        if(i <= partition_point){
-            //doing nothing
-        }// load encrypted weights from the SW side
-        else{
-            if (l.dontsave) continue;
+        if(i > partition_point){
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-                save_convolutional_weights_comm(l, fp);
+                save_convolutional_weights_comm(l, i);
             } if(l.type == CONNECTED){
-                save_connected_weights_comm(l, fp);
+                save_connected_weights_comm(l, i);
             } if(l.type == BATCHNORM){
-                save_batchnorm_weights_comm(l, fp);
+                save_batchnorm_weights_comm(l, i);
             } if(l.type == RNN){
-                save_connected_weights_comm(*(l.input_layer), fp);
-                save_connected_weights_comm(*(l.self_layer), fp);
-                save_connected_weights_comm(*(l.output_layer), fp);
+                save_connected_weights_comm(*(l.input_layer), i);
+                save_connected_weights_comm(*(l.self_layer), i);
+                save_connected_weights_comm(*(l.output_layer), i);
             } if (l.type == LSTM) {
-                save_connected_weights_comm(*(l.wi), fp);
-                save_connected_weights_comm(*(l.wf), fp);
-                save_connected_weights_comm(*(l.wo), fp);
-                save_connected_weights_comm(*(l.wg), fp);
-                save_connected_weights_comm(*(l.ui), fp);
-                save_connected_weights_comm(*(l.uf), fp);
-                save_connected_weights_comm(*(l.uo), fp);
-                save_connected_weights_comm(*(l.ug), fp);
+                save_connected_weights_comm(*(l.wi), i);
+                save_connected_weights_comm(*(l.wf), i);
+                save_connected_weights_comm(*(l.wo), i);
+                save_connected_weights_comm(*(l.wg), i);
+                save_connected_weights_comm(*(l.ui), i);
+                save_connected_weights_comm(*(l.uf), i);
+                save_connected_weights_comm(*(l.uo), i);
+                save_connected_weights_comm(*(l.ug), i);
             } if (l.type == GRU) {
-                save_connected_weights_comm(*(l.wz), fp);
-                save_connected_weights_comm(*(l.wr), fp);
-                save_connected_weights_comm(*(l.wh), fp);
-                save_connected_weights_comm(*(l.uz), fp);
-                save_connected_weights_comm(*(l.ur), fp);
-                save_connected_weights_comm(*(l.uh), fp);
-                }
-            }  if(l.type == CRNN){
-                save_convolutional_weights_comm(*(l.input_layer), fp);
-                save_convolutional_weights_comm(*(l.self_layer), fp);
-                save_convolutional_weights_comm(*(l.output_layer), fp);
+                save_connected_weights_comm(*(l.wz), i);
+                save_connected_weights_comm(*(l.wr), i);
+                save_connected_weights_comm(*(l.wh), i);
+                save_connected_weights_comm(*(l.uz), i);
+                save_connected_weights_comm(*(l.ur), i);
+                save_connected_weights_comm(*(l.uh), i);
+            } if(l.type == CRNN){
+                save_convolutional_weights_comm(*(l.input_layer), i);
+                save_convolutional_weights_comm(*(l.self_layer), i);
+                save_convolutional_weights_comm(*(l.output_layer), i);
             }
         }
 
-        if (l.dontsave) continue;
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
             save_convolutional_weights(l, fp);
         } if(l.type == CONNECTED){
@@ -1205,6 +1200,8 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     }
     fclose(fp);
 }
+
+
 void save_weights(network *net, char *filename)
 {
     save_weights_upto(net, filename, net->n);
