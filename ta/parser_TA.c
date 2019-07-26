@@ -105,6 +105,7 @@ void save_weights_TA(float *weights_encrypted, int length, int layer_i, char typ
 {
     layer_TA l = netta.layers[layer_i];
     printf("layer_i=%d\n", layer_i);
+    printf("layer_type=%s\n", l.type);
     
     if(type == 'b'){
         printf("l.outputs=%d\n", l.outputs);

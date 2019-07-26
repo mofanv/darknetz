@@ -1116,36 +1116,37 @@ void save_weights_upto(network *net, char *filename, int cutoff)
         if (l.dontsave) continue;
         
         if(i > partition_point){
+            int layerTA_i = i - partition_point - 1;
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-                save_convolutional_weights_comm(l, i);
+                save_convolutional_weights_comm(l, layerTA_i);
             } if(l.type == CONNECTED){
-                save_connected_weights_comm(l, i);
+                save_connected_weights_comm(l, layerTA_i);
             } if(l.type == BATCHNORM){
-                save_batchnorm_weights_comm(l, i);
+                save_batchnorm_weights_comm(l, layerTA_i);
             } if(l.type == RNN){
-                save_connected_weights_comm(*(l.input_layer), i);
-                save_connected_weights_comm(*(l.self_layer), i);
-                save_connected_weights_comm(*(l.output_layer), i);
+                save_connected_weights_comm(*(l.input_layer), layerTA_i);
+                save_connected_weights_comm(*(l.self_layer), layerTA_i);
+                save_connected_weights_comm(*(l.output_layer), layerTA_i);
             } if (l.type == LSTM) {
-                save_connected_weights_comm(*(l.wi), i);
-                save_connected_weights_comm(*(l.wf), i);
-                save_connected_weights_comm(*(l.wo), i);
-                save_connected_weights_comm(*(l.wg), i);
-                save_connected_weights_comm(*(l.ui), i);
-                save_connected_weights_comm(*(l.uf), i);
-                save_connected_weights_comm(*(l.uo), i);
-                save_connected_weights_comm(*(l.ug), i);
+                save_connected_weights_comm(*(l.wi), layerTA_i);
+                save_connected_weights_comm(*(l.wf), layerTA_i);
+                save_connected_weights_comm(*(l.wo), layerTA_i);
+                save_connected_weights_comm(*(l.wg), layerTA_i);
+                save_connected_weights_comm(*(l.ui), layerTA_i);
+                save_connected_weights_comm(*(l.uf), layerTA_i);
+                save_connected_weights_comm(*(l.uo), layerTA_i);
+                save_connected_weights_comm(*(l.ug), layerTA_i);
             } if (l.type == GRU) {
-                save_connected_weights_comm(*(l.wz), i);
-                save_connected_weights_comm(*(l.wr), i);
-                save_connected_weights_comm(*(l.wh), i);
-                save_connected_weights_comm(*(l.uz), i);
-                save_connected_weights_comm(*(l.ur), i);
-                save_connected_weights_comm(*(l.uh), i);
+                save_connected_weights_comm(*(l.wz), layerTA_i);
+                save_connected_weights_comm(*(l.wr), layerTA_i);
+                save_connected_weights_comm(*(l.wh), layerTA_i);
+                save_connected_weights_comm(*(l.uz), layerTA_i);
+                save_connected_weights_comm(*(l.ur), layerTA_i);
+                save_connected_weights_comm(*(l.uh), layerTA_i);
             } if(l.type == CRNN){
-                save_convolutional_weights_comm(*(l.input_layer), i);
-                save_convolutional_weights_comm(*(l.self_layer), i);
-                save_convolutional_weights_comm(*(l.output_layer), i);
+                save_convolutional_weights_comm(*(l.input_layer), layerTA_i);
+                save_convolutional_weights_comm(*(l.self_layer), layerTA_i);
+                save_convolutional_weights_comm(*(l.output_layer), layerTA_i);
             }
         }
 
