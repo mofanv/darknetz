@@ -89,6 +89,7 @@ void forward_cost_layer_TA(cost_layer_TA l, network_TA net)
         l2_cpu_TA(l.batch*l.inputs, net.input, net.truth, l.delta, l.output);
     }
     l.cost[0] = sum_array_TA(l.output, l.batch*l.inputs);
+
 }
 
 

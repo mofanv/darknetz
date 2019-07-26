@@ -619,7 +619,17 @@ float *network_predict(network *net, float *input)
     net->train = 0;
     net->delta = 0;
     forward_network(net);
-    float *out = net->output;
+    
+    float *out;
+    
+    if(count_global == (partition_point+2)){
+        out = net->output;
+    }else{
+        //call TA to return output
+        net_output_return_CA(net->outputs, 1);
+        out = net_output_back;
+    }
+    
     *net = orig;
     return out;
 }

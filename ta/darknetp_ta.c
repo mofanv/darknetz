@@ -16,6 +16,7 @@
 #include "darknet_TA.h"
 #include "diffprivate_TA.h"
 #include "parser_TA.h"
+#include "math_TA.h"
 
 #define LOOKUP_SIZE 4096
 
@@ -375,6 +376,15 @@ static TEE_Result transfer_weights_TA_params(uint32_t param_types,
     
     char type = params[2].value.a;
     
+    //for(int z=0; z<length; z++){
+    //    char char0[20];
+    //    ftoa(vec[z], char0, 5);
+    //    IMSG("z=%d, v=%s || ", z, char0);
+    //}
+    //IMSG("---------------------------------\n");
+    //IMSG("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
+    
+    
     load_weights_TA(vec, length, layer_i, type, additional);
     
     return TEE_SUCCESS;
@@ -542,6 +552,44 @@ static TEE_Result calc_network_loss_TA_params(uint32_t param_types,
 }
 
 
+static TEE_Result net_output_return_TA_params(uint32_t param_types,
+                                              TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE);
+    
+    if (param_types != exp_param_types)
+        return TEE_ERROR_BAD_PARAMETERS;
+    
+    float *params0 = params[0].memref.buffer;
+    int buffersize = params[0].memref.size / sizeof(float);
+    
+    // remove confidence scores
+    float * rm_conf[buffersize];
+    float maxconf; maxconf = -0.1;
+    int maxidx; maxidx = 0;
+    for(int z=0; z<buffersize; z++){
+        if(ta_net_output[z] > maxconf){
+            maxconf = ta_net_output[z];
+            maxidx = z;
+        }
+        ta_net_output[z] = 0.0f;
+    }
+    ta_net_output[maxidx] = 1.0f;
+    
+    
+    for(int z=0; z<buffersize; z++){
+        params0[z] = ta_net_output[z];
+    }
+    
+    free(ta_net_output);
+    
+    return TEE_SUCCESS;
+    
+}
+
 TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
                                       uint32_t cmd_id,
                                       uint32_t param_types, TEE_Param params[4])
@@ -594,6 +642,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
         case CALC_LOSS_CMD:
         return calc_network_loss_TA_params(param_types, params);
 
+        case OUTPUT_RETURN_CMD:
+        return net_output_return_TA_params(param_types, params);
+            
         default:
         return TEE_ERROR_BAD_PARAMETERS;
     }

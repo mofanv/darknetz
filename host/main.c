@@ -18,8 +18,9 @@ TEEC_SharedMemory workspaceSM;
 
 float *net_input_back;
 float *net_delta_back;
+float *net_output_back;
 int sysCount = 0;
-
+char state;
 
 void debug_plot(char *filename, int num, float *tobeplot, int length)
 {
@@ -404,6 +405,12 @@ void transfer_weights_CA(float *vec, int length, int layer_i, char type, int add
     uint32_t origin;
     TEEC_Result res;
     
+    //for(int z=0; z<length; z++){
+    //    printf("z=%d, v=%f || ", z, vec[z]);
+    //}
+    //printf("---------------------------------\n");
+    //printf("length=%d, layer_i=%d, additional=%d, type=%c \n", length, layer_i, additional, type);
+    
     int passint[3];
     passint[0] = length;
     passint[1] = layer_i;
@@ -642,6 +649,33 @@ void calc_network_loss_CA(int n, int batch)
     if (res != TEEC_SUCCESS)
     errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
          res, origin);
+}
+
+void net_output_return_CA(int net_outputs, int net_batch)
+{
+    //invoke op and transfer paramters
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+    
+    net_output_back = malloc(sizeof(float) * net_outputs * net_batch);
+    
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT,
+                                     TEEC_NONE,
+                                     TEEC_NONE, TEEC_NONE);
+    
+    op.params[0].tmpref.buffer = net_output_back;
+    op.params[0].tmpref.size = sizeof(float) * net_outputs * net_batch;
+    
+    res = TEEC_InvokeCommand(&sess, OUTPUT_RETURN_CMD,
+                             &op, &origin);
+    
+    float *tem = op.params[0].tmpref.buffer;
+    
+    if (res != TEEC_SUCCESS)
+        errx(1, "TEEC_InvokeCommand(loss) failed 0x%x origin 0x%x",
+             res, origin);
 }
 
 

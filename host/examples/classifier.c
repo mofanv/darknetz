@@ -1,4 +1,5 @@
 #include "darknet.h"
+#include "main.h"
 #include "parser.h"
 
 #include <sys/time.h>
@@ -146,6 +147,11 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 
     int count = 0;
     int epoch = (*net->seen)/N;
+    
+    printf("---------------");
+    printf("get_current_batch(net)=%d \n", get_current_batch(net));
+    printf("net->max_batches=%d \n", net->max_batches);
+    
     while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
         if(net->random && count++%40 == 0){
             printf("Resizing\n");
@@ -628,6 +634,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 {
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
+    
     srand(2222222);
 
     list *options = read_data_cfg(datacfg);
@@ -660,10 +667,21 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
+        
         time=clock();
         float *predictions = network_predict(net, X);
         if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
         top_k(predictions, net->outputs, top, indexes);
+        
+        free(net_output_back);
+        
+        struct rusage usage;
+        struct timeval startu, endu, starts, ends;
+        
+        getrusage(RUSAGE_SELF, &usage);
+        startu = usage.ru_utime;
+        starts = usage.ru_stime;
+        
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
@@ -671,6 +689,14 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
             //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
+        getrusage(RUSAGE_SELF, &usage);
+        endu = usage.ru_utime;
+        ends = usage.ru_stime;
+        printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
+        printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
+        printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
+        getMemory();
+        
         if(r.data != im.data) free_image(r);
         free_image(im);
         if (filename) break;
@@ -1150,7 +1176,10 @@ void run_classifier(int argc, char **argv)
     char *filename = (argc > 6) ? argv[6]: 0;
     char *layer_s = (argc > 7) ? argv[7]: 0;
     int layer = layer_s ? atoi(layer_s) : -1;
-    if(0==strcmp(argv[2], "predict")) predict_classifier(data, cfg, weights, filename, top);
+    if(0==strcmp(argv[2], "predict")) {
+        state = 'p';
+        predict_classifier(data, cfg, weights, filename, top);
+    }
     else if(0==strcmp(argv[2], "fout")) file_output_classifier(data, cfg, weights, filename);
     else if(0==strcmp(argv[2], "try")) try_classifier(data, cfg, weights, filename, atoi(layer_s));
     else if(0==strcmp(argv[2], "train")) train_classifier(data, cfg, weights, gpus, ngpus, clear);

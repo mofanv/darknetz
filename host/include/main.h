@@ -24,6 +24,7 @@
 #define NET_TRUTH_CMD 13
 #define CALC_LOSS_CMD 14
 #define TRANS_WEI_CMD 15
+#define OUTPUT_RETURN_CMD 16
 
 #define TA_DARKNETP_UUID \
 	{ 0x7fc5c039, 0x0542, 0x4ee1, \
@@ -34,6 +35,8 @@ extern TEEC_Session sess;
 
 extern float *net_input_back;
 extern float *net_delta_back;
+extern float *net_output_back;
+extern char state;
 
 void debug_plot(char *filename, int num, float *tobeplot, int length);
 
@@ -68,5 +71,7 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch);
 void calc_network_loss_CA(int n, int batch);
 
 void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional);
+
+void backward_network_CA_addidion(int net_inputs, int net_batch);
 
 #endif
