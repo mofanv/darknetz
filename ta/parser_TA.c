@@ -106,7 +106,7 @@ void save_weights_TA(float *weights_encrypted, int length, int layer_i, char typ
     layer_TA l = netta.layers[layer_i];
     
     if(type == 'b'){
-        IMSG("l.outputs=%d/n", l.outputs);
+        printf("l.outputs=%d\n", l.outputs);
         copy_cpu_TA(length, l.biases, 1, weights_encrypted, 1);
     }
     else if(type == 'w'){
