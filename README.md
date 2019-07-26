@@ -127,7 +127,7 @@ darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mni
 
 By simply typing the following command, you can do inference using a pre-trained model.
 ```
-darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
+darknetp classifier predict -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
 ```
 For defending potential attacks (e.g. membership inference), the cost function is always in the TEE. Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
 
