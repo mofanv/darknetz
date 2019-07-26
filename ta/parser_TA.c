@@ -62,9 +62,9 @@ void transpose_matrix_TA(float *a, int rows, int cols)
 void load_weights_TA(float *vec, int length, int layer_i, char type, int transpose)
 {
     // decrypt
-    //float *tempvec = malloc(length*sizeof(float));
-    //copy_cpu_TA(length, vec, 1, tempvec, 1);
-    //aes_cbc_TA("decrypt", tempvec, length);
+    float *tempvec = malloc(length*sizeof(float));
+    copy_cpu_TA(length, vec, 1, tempvec, 1);
+    aes_cbc_TA("decrypt", tempvec, length);
     float *tempvec = vec;
     
     // copy
@@ -98,7 +98,7 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
         }
     }
     
-    //free(tempvec);
+    free(tempvec);
 }
 
 void save_weights_TA(float *weights_encrypted, int length, int layer_i, char type)

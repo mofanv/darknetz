@@ -403,7 +403,6 @@ static TEE_Result save_weights_TA_params(uint32_t param_types,
     char type = params[2].value.a;
     
     float *weights_encrypted = malloc(sizeof(float)*length);
-    printf("length=%d\n",length);
     save_weights_TA(weights_encrypted, length, layer_i, type);
     
     for(int z=0; z<length; z++){
