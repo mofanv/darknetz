@@ -65,7 +65,6 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     float *tempvec = malloc(length*sizeof(float));
     copy_cpu_TA(length, vec, 1, tempvec, 1);
     aes_cbc_TA("decrypt", tempvec, length);
-    float *tempvec = vec;
     
     // copy
     layer_TA l = netta.layers[layer_i];
