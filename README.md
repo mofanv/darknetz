@@ -38,7 +38,7 @@ xtest
 ## (2) Build Darknetp
 1) clone codes and datasets
 ```
-git clone -b communicate https://github.com/mofanv/darknetp.git
+git clone https://github.com/mofanv/darknetp.git
 git clone https://github.com/mofanv/tz_datasets.git
 ```
 Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
