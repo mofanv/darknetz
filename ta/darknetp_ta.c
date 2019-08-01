@@ -604,9 +604,6 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
 
 
     for(int z=0; z<buffersize; z++){
-        char char1[20];
-        ftoa(ta_net_output[z], char1, 5);
-        printf("ta_net_output[%d]=%s\n", z, char1);
         params0[z] = ta_net_output[z];
     }
 
