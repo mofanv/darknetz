@@ -591,7 +591,7 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     
     // remove confidence scores
     float * rm_conf[buffersize];
-    float maxconf; maxconf = -0.1;
+    float maxconf; maxconf = -0.1f;
     int maxidx; maxidx = 0;
     for(int z=0; z<buffersize; z++){
         if(ta_net_output[z] > maxconf){
