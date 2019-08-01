@@ -76,7 +76,7 @@ void forward_network_TA()
         }
 
         l.forward_TA(l, netta);
-        
+
          netta.input = l.output;
 
         if(l.truth) {
@@ -88,9 +88,9 @@ void forward_network_TA()
             for(int z=0; z<l.outputs*1; z++){
                 ta_net_output[z] = l.output[z];
             }
-            
+
         }
-        
+
     }
 
     calc_network_cost_TA();

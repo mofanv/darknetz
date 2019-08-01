@@ -361,23 +361,23 @@ static TEE_Result transfer_weights_TA_params(uint32_t param_types,
                                                TEE_PARAM_TYPE_MEMREF_INPUT,
                                                TEE_PARAM_TYPE_VALUE_INPUT,
                                                TEE_PARAM_TYPE_NONE);
-    
+
     //DMSG("has been called");
-    
+
     if (param_types != exp_param_types)
         return TEE_ERROR_BAD_PARAMETERS;
-    
+
     float *vec = params[0].memref.buffer;
-    
+
     int *params1 = params[1].memref.buffer;
     int length = params1[0];
     int layer_i = params1[1];
     int additional = params1[2];
-    
+
     char type = params[2].value.a;
-    
+
     load_weights_TA(vec, length, layer_i, type, additional);
-    
+
     return TEE_SUCCESS;
 }
 
@@ -388,27 +388,27 @@ static TEE_Result save_weights_TA_params(uint32_t param_types,
                                                TEE_PARAM_TYPE_MEMREF_INPUT,
                                                TEE_PARAM_TYPE_VALUE_INPUT,
                                                TEE_PARAM_TYPE_NONE);
-    
+
     //DMSG("has been called");
-    
+
     if (param_types != exp_param_types)
         return TEE_ERROR_BAD_PARAMETERS;
-    
+
     float *vec = params[0].memref.buffer;
-    
+
     int *params1 = params[1].memref.buffer;
     int length = params1[0];
     int layer_i = params1[1];
-    
+
     char type = params[2].value.a;
-    
+
     float *weights_encrypted = malloc(sizeof(float)*length);
     save_weights_TA(weights_encrypted, length, layer_i, type);
-    
+
     for(int z=0; z<length; z++){
         vec[z] = weights_encrypted[z];
     }
-    
+
     free(weights_encrypted);
     return TEE_SUCCESS;
 }
@@ -582,35 +582,38 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
                                                TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE);
-    
+
     if (param_types != exp_param_types)
         return TEE_ERROR_BAD_PARAMETERS;
-    
+
     float *params0 = params[0].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
-    
+
     // remove confidence scores
     float * rm_conf[buffersize];
     float maxconf; maxconf = -0.1;
     int maxidx; maxidx = 0;
+    //for(int z=0; z<buffersize; z++){
+    //    if(ta_net_output[z] > maxconf){
+    //        maxconf = ta_net_output[z];
+    //        maxidx = z;
+    //    }
+    //    ta_net_output[z] = 0.0f;
+    //}
+    //ta_net_output[maxidx] = 1.0f;
+
+
     for(int z=0; z<buffersize; z++){
-        if(ta_net_output[z] > maxconf){
-            maxconf = ta_net_output[z];
-            maxidx = z;
-        }
-        ta_net_output[z] = 0.0f;
-    }
-    ta_net_output[maxidx] = 1.0f;
-    
-    
-    for(int z=0; z<buffersize; z++){
+        char char1[20];
+        ftoa(ta_net_output[z], char1, 5);
+        printf("ta_net_output[%d]=%s\n", z, char1);
         params0[z] = ta_net_output[z];
     }
-    
+
     free(ta_net_output);
-    
+
     return TEE_SUCCESS;
-    
+
 }
 
 TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
@@ -643,10 +646,10 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case MAKE_COST_CMD:
         return make_cost_layer_TA_params(param_types, params);
-            
+
         case TRANS_WEI_CMD:
         return transfer_weights_TA_params(param_types, params);
-            
+
         case SAVE_WEI_CMD:
             return save_weights_TA_params(param_types, params);
 
@@ -670,9 +673,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case OUTPUT_RETURN_CMD:
         return net_output_return_TA_params(param_types, params);
-        
 
-            
+
+
         default:
         return TEE_ERROR_BAD_PARAMETERS;
     }
