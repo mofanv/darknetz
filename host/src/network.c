@@ -621,9 +621,9 @@ float *network_predict(network *net, float *input)
     forward_network(net);
     
     float *out;
-    printf("real: %d / %d\n", partition_point, count_global);
-    
-    if(count_global == (partition_point+2)){
+    // this partition_point = (-pp) - 1
+    if(net->layers[partition_point].type == SOFTMAX){
+        // only the softmax is the last layer in NW
         out = net->output;
     }else{
         //call TA to return output
