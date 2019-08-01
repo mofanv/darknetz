@@ -621,6 +621,7 @@ float *network_predict(network *net, float *input)
     forward_network(net);
     
     float *out;
+    printf("real: %d / %d\n", partition_point, count_global);
     
     if(count_global == (partition_point+2)){
         out = net->output;
