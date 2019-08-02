@@ -12,12 +12,12 @@
 #include <string.h>
 
 void getMemory() {
-    
+
     // stores each word in status file
     char buffer[1024] = "";
     unsigned long vmsize, vmrss, vmdata, vmstk, vmexe, vmlib;
     FILE* file = fopen("/proc/self/status", "r");
-    
+
     // read the entire file
     if(file){
         while (fscanf(file, " %1023s", buffer) == 1) {
@@ -49,7 +49,7 @@ void getMemory() {
     }else{
         printf("memory status file not found");
     }
-    
+
     fclose(file);
 }
 
@@ -147,13 +147,13 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 
     int count = 0;
     int epoch = (*net->seen)/N;
-    
+
     printf("current_batch=%d \n", get_current_batch(net));
-    
+
     if(get_current_batch(net) >= net->max_batches){
         net->max_batches = get_current_batch(net) + net->max_batches;
     }
-    
+
     while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
         if(net->random && count++%40 == 0){
             printf("Resizing\n");
@@ -178,14 +178,14 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
             }
             net = nets[0];
         }
-        
+
         struct rusage usage;
         struct timeval startu, endu, starts, ends;
-        
+
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
-        
+
         time = what_time_is_it_now();
 
         pthread_join(load_thread, 0);
@@ -208,7 +208,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         if(avg_loss == -1) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
-        
+
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
         ends = usage.ru_stime;
@@ -216,7 +216,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
         getMemory();
-        
+
         free_data(train);
         if(*net->seen/N > epoch){
             epoch = *net->seen/N;
@@ -636,7 +636,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 {
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
-    
+
     srand(2222222);
 
     list *options = read_data_cfg(datacfg);
@@ -669,21 +669,22 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
-        
+
         time=clock();
         float *predictions = network_predict(net, X);
         if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+
         top_k(predictions, net->outputs, top, indexes);
-        
+
         free(net_output_back);
-        
+
         struct rusage usage;
         struct timeval startu, endu, starts, ends;
-        
+
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
-        
+
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
@@ -698,7 +699,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
         getMemory();
-        
+
         if(r.data != im.data) free_image(r);
         free_image(im);
         if (filename) break;
