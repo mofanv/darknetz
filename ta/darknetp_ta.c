@@ -602,7 +602,6 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     }
     ta_net_output[maxidx] = 1.0f;
 
-
     for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_output[z];
     }
