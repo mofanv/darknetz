@@ -154,7 +154,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 
     int count = 0;
     int epoch = (*net->seen)/N;
-    
+
     // output file
     struct stat st = {0};
     if (stat("/media/results", &st) == -1) {
@@ -164,27 +164,27 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     char delim[] = "/.";
     char *ptr = strtok(cfgfile, delim);
     ptr = strtok(NULL, delim);
-    
+
     char pp_str[5];
     sprintf(pp_str, "%d", partition_point + 1);
-    
+
     char *output_dir[80];
     strcpy(output_dir, "/media/results/train_");
     strcat(output_dir, ptr);
     strcat(output_dir, "_pp");
     strcat(output_dir, pp_str);
     strcat(output_dir, ".txt");
-    
+
     printf("output file: %s\n", output_dir);
-    
+
     FILE *output_file = fopen(output_dir, "w");
-    
+
     // additional train
     printf("current_batch=%d \n", get_current_batch(net));
     if(get_current_batch(net) >= net->max_batches){
         net->max_batches = get_current_batch(net) + net->max_batches;
     }
-    
+
     while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
         if(net->random && count++%40 == 0){
             printf("Resizing\n");
@@ -240,8 +240,8 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         avg_loss = avg_loss*.9 + loss*.1;
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
         fprintf(output_file, "%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
-        
-        
+
+
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
         ends = usage.ru_stime;
@@ -252,7 +252,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         fprintf(output_file, "kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         fprintf(output_file, "Max: %ld  kilobytes\n", usage.ru_maxrss);
         getMemory(output_file);
-        
+
 
         free_data(train);
         if(*net->seen/N > epoch){
@@ -268,7 +268,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         }
     }
     fclose(output_file);
-    
+
     char buff[256];
     sprintf(buff, "%s/%s.weights", backup_directory, base);
     save_weights(net, buff);
@@ -723,7 +723,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
-        
+
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
@@ -731,31 +731,31 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
             //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
-        
+
         // output file
         struct stat st = {0};
         if (stat("/media/results", &st) == -1) {
             mkdir("/media/results", 0700);
         }
-        
+
         char delim[] = "/.";
         char *ptr = strtok(cfgfile, delim);
         ptr = strtok(NULL, delim);
-        
+
         char pp_str[5];
         sprintf(pp_str, "%d", partition_point + 1);
-        
+
         char *output_dir[80];
         strcpy(output_dir, "/media/results/predict_");
         strcat(output_dir, ptr);
         strcat(output_dir, "_pp");
         strcat(output_dir, pp_str);
         strcat(output_dir, ".txt");
-        
+
         printf("output file: %s\n", output_dir);
         FILE *output_file = fopen(output_dir, "a");
-        
-        
+
+
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
         ends = usage.ru_stime;
@@ -766,9 +766,9 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         fprintf(output_file, "kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         fprintf(output_file, "Max: %ld  kilobytes\n", usage.ru_maxrss);
         getMemory(output_file);
-        
+
         fclose(output_file);
-        
+
         if(r.data != im.data) free_image(r);
         free_image(im);
         if (filename) break;
