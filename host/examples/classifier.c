@@ -723,6 +723,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
+<<<<<<< HEAD
 
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
@@ -732,6 +733,9 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
 
+=======
+        
+>>>>>>> 24ba4cde66162dc103c10a06acede784c1fde2cb
         // output file
         struct stat st = {0};
         if (stat("/media/results", &st) == -1) {
@@ -754,8 +758,24 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 
         printf("output file: %s\n", output_dir);
         FILE *output_file = fopen(output_dir, "a");
+<<<<<<< HEAD
 
 
+=======
+        
+        fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        fprintf(output_file, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        
+        for(i = 0; i < top; ++i){
+            int index = indexes[i];
+            //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
+            //else printf("%s: %f\n",names[index], predictions[index]);
+            printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
+        }
+        
+
+        
+>>>>>>> 24ba4cde66162dc103c10a06acede784c1fde2cb
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
         ends = usage.ru_stime;
