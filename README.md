@@ -7,6 +7,8 @@ Please consider citing this corresponding paper if this project is helpful to yo
 
 **[Towards Characterizing and Limiting Information Exposure in DNN Layers](https://arxiv.org/abs/1907.06034)** Fan Mo, Ali Shahin Shamsabadi, Kleomenis Katevas, Andrea Cavallaro, Hamed Haddadi
 
+The lastest version of the paper accepted to (MobiSys 2020)[https://www.sigmobile.org/mobisys/2020/] will be available soon!
+
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
 
@@ -14,12 +16,12 @@ You can run this application with real TrustZone or a simulated one by using QEM
 
 **For simulation**, no additional hardware is needed.
 
-**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/building/devices/index.html) for more info.
+**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/en/latest/building/devices/index.html#device-specific) for more info.
 
 # Setup
 ## (1) Set up OP-TEE
 1) Follow **step1** ~ **step5** in "**Get and build the solution**" to build the OP-TEE solution.
-https://optee.readthedocs.io/building/gits/build.html#get-and-build-the-solution
+https://optee.readthedocs.io/en/latest/building/gits/build.html#get-and-build-the-solution
 
 2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device-specific.
 
