@@ -7,7 +7,7 @@ Please consider citing this corresponding paper if this project is helpful to yo
 
 **[Towards Characterizing and Limiting Information Exposure in DNN Layers](https://arxiv.org/abs/1907.06034)** Fan Mo, Ali Shahin Shamsabadi, Kleomenis Katevas, Andrea Cavallaro, Hamed Haddadi
 
-The lastest version of the paper accepted to (MobiSys 2020)[https://www.sigmobile.org/mobisys/2020/] will be available soon!
+The lastest version of the paper accepted to [MobiSys 2020](https://www.sigmobile.org/mobisys/2020/) will be available soon!
 
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
