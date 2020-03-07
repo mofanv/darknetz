@@ -21,13 +21,13 @@ void aes_cbc_TA(char* xcrypt, float* gradient, int org_len)
             array[z*4 + y] = byte[y];
         }
     }
-    
+
     //set ctx, iv, and key for aes
     int enc_len = (int)(org_len/4);
     struct AES_ctx ctx;
     uint8_t iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     uint8_t key[16] = { (uint8_t)0x2b, (uint8_t)0x7e, (uint8_t)0x15, (uint8_t)0x16, (uint8_t)0x28, (uint8_t)0xae, (uint8_t)0xd2, (uint8_t)0xa6, (uint8_t)0xab, (uint8_t)0xf7, (uint8_t)0x15, (uint8_t)0x88, (uint8_t)0x09, (uint8_t)0xcf, (uint8_t)0x4f, (uint8_t)0x3c };
-    
+
     //encryption
     AES_init_ctx_iv(&ctx, key, iv);
     for (int i = 0; i < enc_len; ++i)
@@ -38,7 +38,7 @@ void aes_cbc_TA(char* xcrypt, float* gradient, int org_len)
             AES_CBC_decrypt_buffer(&ctx, array + (i * 16), 16);
         }
     }
-    
+
     //convert uint8_t to float one by one
     for(int z = 0; z < org_len; z++){
         gradient[z] = *(float*)(&array[z*4]);
@@ -65,7 +65,7 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     float *tempvec = malloc(length*sizeof(float));
     copy_cpu_TA(length, vec, 1, tempvec, 1);
     aes_cbc_TA("decrypt", tempvec, length);
-    
+
     // copy
     layer_TA l = netta.layers[layer_i];
 
@@ -84,8 +84,8 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     else if(type == 'v'){
         copy_cpu_TA(length, tempvec, 1, l.rolling_variance, 1);
     }
-    
-    
+
+
     if(l.type == CONVOLUTIONAL_TA || l.type == DECONVOLUTIONAL_TA){
         if(l.flipped && type == 'w'){
             transpose_matrix_TA(l.weights, l.c*l.size*l.size, l.n);
@@ -96,14 +96,14 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
             transpose_matrix_TA(l.weights, l.inputs, l.outputs);
         }
     }
-    
+
     free(tempvec);
 }
 
 void save_weights_TA(float *weights_encrypted, int length, int layer_i, char type)
 {
     layer_TA l = netta.layers[layer_i];
-    
+
     if(type == 'b'){
         copy_cpu_TA(length, l.biases, 1, weights_encrypted, 1);
     }
@@ -119,7 +119,7 @@ void save_weights_TA(float *weights_encrypted, int length, int layer_i, char typ
     else if(type == 'v'){
         copy_cpu_TA(length, l.rolling_variance, 1, weights_encrypted, 1);
     }
-    
+
     //encryption
     aes_cbc_TA("encrypt", weights_encrypted, length);
 }

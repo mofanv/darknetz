@@ -8,48 +8,55 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 
-void getMemory() {
-    
+void getMemory(FILE *output_file) {
+
     // stores each word in status file
     char buffer[1024] = "";
     unsigned long vmsize, vmrss, vmdata, vmstk, vmexe, vmlib;
     FILE* file = fopen("/proc/self/status", "r");
-    
+
     // read the entire file
     if(file){
         while (fscanf(file, " %1023s", buffer) == 1) {
             if (strcmp(buffer, "VmSize:") == 0) {
                 fscanf(file, " %d", &vmsize);
                 printf("vmsize:%ld; ", vmsize);
+                fprintf(output_file, "vmsize:%ld; ", vmsize);
             }
             if (strcmp(buffer, "VmRSS:") == 0) {
                 fscanf(file, " %d", &vmrss);
                 printf("vmrss:%ld; ", vmrss);
+                fprintf(output_file, "vmrss:%ld; ", vmrss);
             }
             if (strcmp(buffer, "VmData:") == 0) {
                 fscanf(file, " %d", &vmdata);
                 printf("vmdata:%ld; ", vmdata);
+                fprintf(output_file, "vmdata:%ld; ", vmdata);
             }
             if (strcmp(buffer, "VmStk:") == 0) {
                 fscanf(file, " %d", &vmstk);
                 printf("vmstk:%ld; ", vmstk);
+                fprintf(output_file, "vmstk:%ld; ", vmstk);
             }
             if (strcmp(buffer, "VmExe:") == 0) {
                 fscanf(file, " %d", &vmexe);
                 printf("vmexe:%ld; ", vmexe);
+                fprintf(output_file, "vmexe:%ld; ", vmexe);
             }
             if (strcmp(buffer, "VmLib:") == 0) {
                 fscanf(file, " %d", &vmlib);
                 printf("vmlib:%ld\n", vmlib);
+                fprintf(output_file, "vmlib:%ld\n", vmlib);
             }
         }
     }else{
         printf("memory status file not found");
     }
-    
+
     fclose(file);
 }
 
@@ -148,8 +155,32 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     int count = 0;
     int epoch = (*net->seen)/N;
     
-    printf("current_batch=%d \n", get_current_batch(net));
+    // output file
+    struct stat st = {0};
+    if (stat("/media/results", &st) == -1) {
+        mkdir("/media/results", 0700);
+    }
+
+    char delim[] = "/.";
+    char *ptr = strtok(cfgfile, delim);
+    ptr = strtok(NULL, delim);
     
+    char pp_str[5];
+    sprintf(pp_str, "%d", partition_point + 1);
+    
+    char *output_dir[80];
+    strcpy(output_dir, "/media/results/train_");
+    strcat(output_dir, ptr);
+    strcat(output_dir, "_pp");
+    strcat(output_dir, pp_str);
+    strcat(output_dir, ".txt");
+    
+    printf("output file: %s\n", output_dir);
+    
+    FILE *output_file = fopen(output_dir, "w");
+    
+    // additional train
+    printf("current_batch=%d \n", get_current_batch(net));
     if(get_current_batch(net) >= net->max_batches){
         net->max_batches = get_current_batch(net) + net->max_batches;
     }
@@ -178,14 +209,14 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
             }
             net = nets[0];
         }
-        
+
         struct rusage usage;
         struct timeval startu, endu, starts, ends;
-        
+
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
-        
+
         time = what_time_is_it_now();
 
         pthread_join(load_thread, 0);
@@ -208,6 +239,8 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         if(avg_loss == -1) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
+        fprintf(output_file, "%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, *net->seen);
+        
         
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
@@ -215,8 +248,12 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
         printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
-        getMemory();
+        fprintf(output_file, "user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
+        fprintf(output_file, "kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
+        fprintf(output_file, "Max: %ld  kilobytes\n", usage.ru_maxrss);
+        getMemory(output_file);
         
+
         free_data(train);
         if(*net->seen/N > epoch){
             epoch = *net->seen/N;
@@ -230,6 +267,8 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
             save_weights(net, buff);
         }
     }
+    fclose(output_file);
+    
     char buff[256];
     sprintf(buff, "%s/%s.weights", backup_directory, base);
     save_weights(net, buff);
@@ -636,7 +675,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 {
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
-    
+
     srand(2222222);
 
     list *options = read_data_cfg(datacfg);
@@ -669,35 +708,69 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
         //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
-        
+
         time=clock();
         float *predictions = network_predict(net, X);
         if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+
         top_k(predictions, net->outputs, top, indexes);
-        
+
         free(net_output_back);
-        
+
         struct rusage usage;
         struct timeval startu, endu, starts, ends;
-        
+
         getrusage(RUSAGE_SELF, &usage);
         startu = usage.ru_utime;
         starts = usage.ru_stime;
         
+        // output file
+        struct stat st = {0};
+        if (stat("/media/results", &st) == -1) {
+            mkdir("/media/results", 0700);
+        }
+        
+        char delim[] = "/.";
+        char *ptr = strtok(cfgfile, delim);
+        ptr = strtok(NULL, delim);
+        
+        char pp_str[5];
+        sprintf(pp_str, "%d", partition_point + 1);
+        
+        char *output_dir[80];
+        strcpy(output_dir, "/media/results/predict_");
+        strcat(output_dir, ptr);
+        strcat(output_dir, "_pp");
+        strcat(output_dir, pp_str);
+        strcat(output_dir, ".txt");
+        
+        printf("output file: %s\n", output_dir);
+        FILE *output_file = fopen(output_dir, "a");
+        
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        fprintf(output_file, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
+        
         for(i = 0; i < top; ++i){
             int index = indexes[i];
             //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
             //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
+        
+
+        
         getrusage(RUSAGE_SELF, &usage);
         endu = usage.ru_utime;
         ends = usage.ru_stime;
         printf("user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
         printf("kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
         printf("Max: %ld  kilobytes\n", usage.ru_maxrss);
-        getMemory();
+        fprintf(output_file, "user CPU start: %lu.%06u; end: %lu.%06u\n", startu.tv_sec, startu.tv_usec, endu.tv_sec, endu.tv_usec);
+        fprintf(output_file, "kernel CPU start: %lu.%06u; end: %lu.%06u\n", starts.tv_sec, starts.tv_usec, ends.tv_sec, ends.tv_usec);
+        fprintf(output_file, "Max: %ld  kilobytes\n", usage.ru_maxrss);
+        getMemory(output_file);
+        
+        fclose(output_file);
         
         if(r.data != im.data) free_image(r);
         free_image(im);
