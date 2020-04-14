@@ -3,11 +3,10 @@ This is an application that runs several layers of a Deep Neural Network (DNN) m
 This application is based on [Darknet DNN framework](https://pjreddie.com/darknet/) and needs to be run with [OP-TEE](https://www.op-tee.org/), an open source framework for Arm TrustZone.
 
 ---------------------------
-Please consider citing this corresponding paper if this project is helpful to you:
+Please consider citing this corresponding paper at [MobiSys 2020](https://www.sigmobile.org/mobisys/2020/) if this project is helpful to you:
 
-**[Towards Characterizing and Limiting Information Exposure in DNN Layers](https://arxiv.org/abs/1907.06034)** Fan Mo, Ali Shahin Shamsabadi, Kleomenis Katevas, Andrea Cavallaro, Hamed Haddadi
+**[DarkneTZ: Towards Model Privacy at the Edge using Trusted Execution Environments](https://arxiv.org/abs/2004.05703)** Fan Mo, Ali Shahin Shamsabadi, Kleomenis Katevas, Soteris Demetriou, Ilias Leontiadis, Andrea Cavallaro, Hamed Haddadi
 
-The lastest version of the paper accepted to [MobiSys 2020](https://www.sigmobile.org/mobisys/2020/) will be available soon!
 
 # Prerequisites
 You can run this application with real TrustZone or a simulated one by using QEMU.
