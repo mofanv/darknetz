@@ -62,6 +62,7 @@ void make_network_CA(int n, float learning_rate, float momentum, float decay, in
   TEEC_Result res;
 
     int passint[17];
+
     passint[0] = n;
     passint[1] = time_steps;
     passint[2] = notruth;
@@ -404,23 +405,23 @@ void transfer_weights_CA(float *vec, int length, int layer_i, char type, int add
     TEEC_Operation op;
     uint32_t origin;
     TEEC_Result res;
-    
+
     int passint[3];
     passint[0] = length;
     passint[1] = layer_i;
     passint[2] = additional;
-    
+
     memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT, TEEC_NONE);
-    
+
     op.params[0].tmpref.buffer = vec;
     op.params[0].tmpref.size = sizeof(float)*length;
-    
+
     op.params[1].tmpref.buffer = passint;
     op.params[1].tmpref.size = sizeof(passint);
-    
+
     op.params[2].value.a = type;
-    
+
     res = TEEC_InvokeCommand(&sess, TRANS_WEI_CMD,
                              &op, &origin);
     if (res != TEEC_SUCCESS)
@@ -433,33 +434,33 @@ void save_weights_CA(float *vec, int length, int layer_i, char type)
     TEEC_Operation op;
     uint32_t origin;
     TEEC_Result res;
-    
+
     int passint[2];
     passint[0] = length;
     passint[1] = layer_i;
-    
+
     float *weights_back = malloc(sizeof(float) * length);
-    
+
     memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT, TEEC_NONE);
-    
+
     op.params[0].tmpref.buffer = weights_back;
     op.params[0].tmpref.size = sizeof(float) * length;
-    
+
     op.params[1].tmpref.buffer = passint;
     op.params[1].tmpref.size = sizeof(passint);
-    
+
     op.params[2].value.a = type;
-    
+
     res = TEEC_InvokeCommand(&sess, SAVE_WEI_CMD,
                              &op, &origin);
-    
+
     for(int z=0; z<length; z++){
          vec[z] = weights_back[z];
     }
-    
+
     free(weights_back);
-    
+
     if (res != TEEC_SUCCESS)
         errx(1, "TEEC_InvokeCommand(SAVE_WEI) failed 0x%x origin 0x%x",
              res, origin);
@@ -687,22 +688,22 @@ void net_output_return_CA(int net_outputs, int net_batch)
     TEEC_Operation op;
     uint32_t origin;
     TEEC_Result res;
-    
+
     net_output_back = malloc(sizeof(float) * net_outputs * net_batch);
-    
+
     memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT,
                                      TEEC_NONE,
                                      TEEC_NONE, TEEC_NONE);
-    
+
     op.params[0].tmpref.buffer = net_output_back;
     op.params[0].tmpref.size = sizeof(float) * net_outputs * net_batch;
-    
+
     res = TEEC_InvokeCommand(&sess, OUTPUT_RETURN_CMD,
                              &op, &origin);
-    
+
     float *tem = op.params[0].tmpref.buffer;
-    
+
     if (res != TEEC_SUCCESS)
         errx(1, "TEEC_InvokeCommand(return) failed 0x%x origin 0x%x",
              res, origin);

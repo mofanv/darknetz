@@ -204,11 +204,11 @@ int workspaceBOO(network net)
                   workspace_size = l.workspace_size;
             }
 
-            if(partition_point < i){
+            if(partition_point2 < i){
                   untrusted_has_conv = 1;
             }
 
-            if(partition_point >= i){
+            if(partition_point2 >= i){
                   trusted_has_conv = 1;
             }
         }
@@ -238,7 +238,7 @@ void forward_network(network *netp)
         net.index = i;
         layer l = net.layers[i];
 
-        if(i > partition_point)
+        if(i > partition_point2)
         {
             forward_network_CA(net.input, l.inputs, net.batch, net.train);
             i = net.n;
@@ -294,7 +294,7 @@ void update_network(network *netp)
         layer l = net.layers[i];
         if(l.update){
 
-            if(i > partition_point)
+            if(i > partition_point2)
             {
                 update_network_CA(a);
                 i = net.n;
@@ -339,7 +339,7 @@ void backward_network(network *netp)
     int i;
     network orig = net;
 
-    int size_prev = net.layers[partition_point].outputs * net.batch;
+    int size_prev = net.layers[partition_point2].outputs * net.batch;
     float *ca_prevlayer_input = malloc(sizeof(float) * size_prev);
     float *ca_prevlayer_delta = malloc(sizeof(float) * size_prev);
 
@@ -351,7 +351,7 @@ void backward_network(network *netp)
             net = orig;
 
         }else if(i == net.n-1){
-            layer prev = net.layers[partition_point];
+            layer prev = net.layers[partition_point2];
             for(int z=0; z<size_prev; z++){
                 ca_prevlayer_input[z] = prev.output[z];
                 ca_prevlayer_delta[z] = prev.delta[z];
@@ -367,12 +367,12 @@ void backward_network(network *netp)
 
         net.index = i;
 
-        if(i > partition_point)
+        if(i > partition_point2)
         {
 
-            backward_network_CA(ca_prevlayer_input, net.layers[partition_point].outputs, net.batch, ca_prevlayer_delta, net.train);
+            backward_network_CA(ca_prevlayer_input, net.layers[partition_point2].outputs, net.batch, ca_prevlayer_delta, net.train);
 
-            backward_network_CA_addidion(net.layers[partition_point].outputs, net.batch);
+            backward_network_CA_addidion(net.layers[partition_point2].outputs, net.batch);
 
             for(int z=0; z<size_prev; z++){
                 net.input[z] = net_input_back[z];
@@ -383,7 +383,7 @@ void backward_network(network *netp)
 
             if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
 
-            i = partition_point + 1;
+            i = partition_point2 + 1;
         }else
         {
             l.backward(l, net);
@@ -619,10 +619,10 @@ float *network_predict(network *net, float *input)
     net->train = 0;
     net->delta = 0;
     forward_network(net);
-    
+
     float *out;
-    // this partition_point = (-pp) - 1
-    if(net->layers[partition_point].type == SOFTMAX){
+    // this partition_point2 = (-pp) - 1
+    if(net->layers[partition_point2].type == SOFTMAX){
         // only the softmax is the last layer in NW
         out = net->output;
     }else{
@@ -630,7 +630,7 @@ float *network_predict(network *net, float *input)
         net_output_return_CA(net->outputs, 1);
         out = net_output_back;
     }
-    
+
     *net = orig;
     return out;
 }

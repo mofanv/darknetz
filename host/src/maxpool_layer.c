@@ -49,8 +49,8 @@ maxpool_layer make_maxpool_layer(int batch, int h, int w, int c, int size, int s
     l.output_gpu  = cuda_make_array(l.output, output_size);
     l.delta_gpu   = cuda_make_array(l.delta, output_size);
     #endif
-    
-    if(count_global <= partition_point){
+
+    if(count_global <= partition_point2){
         fprintf(stderr, "max          %d x %d / %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
     }else{
         fprintf(stderr, "max_TA       %d x %d / %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c);
@@ -131,4 +131,3 @@ void backward_maxpool_layer(const maxpool_layer l, network net)
         net.delta[index] += l.delta[i];
     }
 }
-
