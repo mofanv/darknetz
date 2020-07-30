@@ -590,17 +590,19 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     int buffersize = params[0].memref.size / sizeof(float);
 
     // remove confidence scores
-    float * rm_conf[buffersize];
-    float maxconf; maxconf = -0.1f;
+    float rm_conf[buffersize];
+    float maxconf; maxconf = 0.00001f;
     int maxidx; maxidx = 0;
-    for(int z=0; z<buffersize; z++){
-        if(ta_net_output[z] > maxconf){
-            maxconf = ta_net_output[z];
-            maxidx = z;
-        }
-        ta_net_output[z] = 0.0f;
-    }
-    ta_net_output[maxidx] = 1.0f;
+
+    // for(int z=0; z<buffersize; z++){
+    //     rm_conf[z] = ta_net_output[z];
+    //     if(rm_conf[z] > maxconf){
+    //         maxconf = rm_conf[z];
+    //         maxidx = z;
+    //     }
+    //     rm_conf[z] = 0.0f;
+    // }
+    // rm_conf[maxidx] = 0.99f;
 
     for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_output[z];
