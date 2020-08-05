@@ -42,7 +42,7 @@ char *get_cost_string(COST_TYPE a)
 
 cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float scale)
 {
-    if(count_global <= partition_point){
+    if(count_global <= partition_point1 || count_global > partition_point2){
         fprintf(stderr, "cost                                           %4d\n",  inputs);
     }else{
         fprintf(stderr, "cost_TA                                        %4d\n",  inputs);
@@ -179,4 +179,3 @@ void backward_cost_layer_gpu(const cost_layer l, network net)
     axpy_gpu(l.batch*l.inputs, l.scale, l.delta_gpu, 1, net.delta_gpu, 1);
 }
 #endif
-

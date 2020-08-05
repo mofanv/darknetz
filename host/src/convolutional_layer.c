@@ -333,7 +333,7 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
 
 
 
-    if(count_global <= partition_point){
+    if(count_global <= partition_point1 || count_global > partition_point2){
         fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c, (2.0 * l.n * l.size*l.size*l.c/l.groups * l.out_h*l.out_w)/1000000000.);
     }else{
         fprintf(stderr, "conv_TA%5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c, (2.0 * l.n * l.size*l.size*l.c/l.groups * l.out_h*l.out_w)/1000000000.);
@@ -519,6 +519,7 @@ void forward_convolutional_layer(convolutional_layer l, network net)
     debug_num++;
 }
 
+
 void backward_convolutional_layer(convolutional_layer l, network net)
 {
     int i, j;
@@ -578,6 +579,7 @@ void backward_convolutional_layer(convolutional_layer l, network net)
         diff_private_func(l.weight_updates, l.nweights);
     }
 }
+
 
 void update_convolutional_layer(convolutional_layer l, update_args a)
 {

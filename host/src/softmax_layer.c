@@ -13,7 +13,7 @@ softmax_layer make_softmax_layer(int batch, int inputs, int groups)
 {
     assert(inputs%groups == 0);
 
-    if(count_global <= partition_point){
+    if(count_global <= partition_point1 || count_global > partition_point2){
         fprintf(stderr, "softmax                                        %4d\n",  inputs);
     }else{
         fprintf(stderr, "softmax_TA                                     %4d\n",  inputs);

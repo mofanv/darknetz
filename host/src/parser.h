@@ -3,7 +3,8 @@
 #include "darknet.h"
 #include "network.h"
 
-extern int partition_point;
+extern int partition_point1;
+extern int partition_point2;
 extern int count_global;
 extern int global_dp;
 

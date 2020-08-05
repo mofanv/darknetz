@@ -33,5 +33,9 @@ extern float *netta_truth;
 #define OUTPUT_RETURN_CMD 16
 #define SAVE_WEI_CMD 17
 
+#define FORWARD_BACK_CMD 18
+#define BACKWARD_BACK_CMD 19
+#define BACKWARD_BACK_ADD_CMD 20
+
 
 #endif /*TA_DARKNETP_H*/

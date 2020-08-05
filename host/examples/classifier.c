@@ -184,14 +184,18 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
         char *ptr = strtok(cfgfile, delim);
         ptr = strtok(NULL, delim);
 
-        char pp_str[5];
-        sprintf(pp_str, "%d", partition_point + 1);
+        char pp_str_start[5];
+        sprintf(pp_str_start, "%d", partition_point1 + 1);
+        char pp_str_end[5];
+        sprintf(pp_str_end, "%d", partition_point2);
 
         char *output_dir[80];
         strcpy(output_dir, "/media/results/train_");
         strcat(output_dir, ptr);
-        strcat(output_dir, "_pp");
-        strcat(output_dir, pp_str);
+        strcat(output_dir, "_pps");
+        strcat(output_dir, pp_str_start);
+        strcat(output_dir, "_ppe");
+        strcat(output_dir, pp_str_end);
         strcat(output_dir, ".txt");
 
         printf("output file: %s\n", output_dir);
@@ -292,7 +296,6 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
         sprintf(buff, "%s/%s.weights", backup_directory, base);
         save_weights(net, buff);
         pthread_join(load_thread, 0);
-
         // save received net para
         if(fl) {
                 int sf_res = tcp_transfer(buff, "send");
@@ -555,6 +558,7 @@ void validate_classifier_single(char *datacfg, char *filename, char *weightfile)
         }
 }
 
+
 void validate_classifier_multi(char *datacfg, char *cfg, char *weights)
 {
         int i, j;
@@ -758,14 +762,18 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
                 char *ptr = strtok(cfgfile, delim);
                 ptr = strtok(NULL, delim);
 
-                char pp_str[5];
-                sprintf(pp_str, "%d", partition_point + 1);
+                char pp_str_start[5];
+                sprintf(pp_str_start, "%d", partition_point1 + 1);
+                char pp_str_end[5];
+                sprintf(pp_str_end, "%d", partition_point2);
 
                 char *output_dir[80];
                 strcpy(output_dir, "/media/results/predict_");
                 strcat(output_dir, ptr);
-                strcat(output_dir, "_pp");
-                strcat(output_dir, pp_str);
+                strcat(output_dir, "_pps");
+                strcat(output_dir, pp_str_start);
+                strcat(output_dir, "_ppe");
+                strcat(output_dir, pp_str_end);
                 strcat(output_dir, ".txt");
 
                 printf("output file: %s\n", output_dir);
@@ -1261,8 +1269,10 @@ void run_classifier(int argc, char **argv)
         int *gpus = read_intlist(gpu_list, &ngpus, gpu_index);
 
         // partition point of DNN
-        int pp = find_int_arg(argc, argv, "-pp", 5);
-        partition_point = pp - 1;
+        int pp_start = find_int_arg(argc, argv, "-pp_start", 5);
+        partition_point1 = pp_start - 1;
+        int pp_end = find_int_arg(argc, argv, "-pp_end", 7);
+        partition_point2 = pp_end;
         int dp = find_int_arg(argc, argv, "-dp", -1);
         global_dp = dp;
 

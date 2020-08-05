@@ -77,20 +77,27 @@ void forward_network_TA()
 
         l.forward_TA(l, netta);
 
-         netta.input = l.output;
+        netta.input = l.output;
 
         if(l.truth) {
             netta.truth = l.output;
         }
         //output of the network (for predict)
+        // &&
         if(l.type == SOFTMAX_TA){
             ta_net_output = malloc(sizeof(float)*l.outputs*1);
             for(int z=0; z<l.outputs*1; z++){
                 ta_net_output[z] = l.output[z];
             }
-
         }
 
+        // if(i == netta.n - 1)  // ready to back REE for the rest forward pass
+        // {
+        //     ta_net_input = malloc(sizeof(float)*l.outputs*l.batch);
+        //     for(int z=0; z<l.outputs*l.batch; z++){
+        //         ta_net_input[z] = netta.input[z];
+        //     }
+        // }
     }
 
     calc_network_cost_TA();
@@ -156,6 +163,7 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
             ta_net_delta = malloc(sizeof(float)*l.inputs*l.batch);
 
             for(int z=0; z<l.inputs*l.batch; z++){
+             // note: both ca_net_input and ca_net_delta are pointer
                 ta_net_input[z] = ca_net_input[z];
                 ta_net_delta[z] = ca_net_delta[z];
             }
@@ -171,6 +179,7 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
         netta.index = i;
         l.backward_TA(l, netta);
 
+        // when the first layer in TEE is a Dropout layer
         if((l.type == DROPOUT_TA) && (i == 0)){
             for(int z=0; z<l.inputs*l.batch; z++){
                 ta_net_input[z] = l.output[z];

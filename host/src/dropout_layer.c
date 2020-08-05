@@ -25,8 +25,7 @@ dropout_layer make_dropout_layer(int batch, int inputs, float probability)
     l.rand_gpu = cuda_make_array(l.rand, inputs*batch);
 #endif
 
-    int boo = (count_global <= partition_point);
-    if(count_global <= partition_point){
+    if(count_global <= partition_point1 || count_global > partition_point2){
         fprintf(stderr, "dropout       p = %.2f               %4d  ->  %4d\n", probability, inputs, inputs);
     }else{
         fprintf(stderr, "dropout_TA    p = %.2f               %4d  ->  %4d\n", probability, inputs, inputs);
