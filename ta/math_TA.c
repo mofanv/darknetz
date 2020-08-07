@@ -232,8 +232,16 @@ int intToStr(int x, char str[], int d)
 }
 
 // Converts a floating point number to string.
-void ftoa(float n, char *res, int afterpoint)
+void ftoa(float n_orig, char *res, int afterpoint)
 {
+    // handle negative
+    float n = 0.0f;
+    if(n_orig < 0){
+        n = n_orig * -1;
+    }else{
+        n = n_orig;
+    }
+
     // Extract integer part
     int ipart = (int)n;
 
@@ -261,7 +269,7 @@ void ftoa(float n, char *res, int afterpoint)
 void bubble_sort_top(float *arr, int len) {
     int i, j;
     float temp;
-    
+
     // sort
     for (i = 0; i < len - 1; i++){
         for (j = 0; j < len - 1 - i; j++){

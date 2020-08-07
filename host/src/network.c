@@ -37,6 +37,9 @@
 #include "parser.h"
 #include "data.h"
 
+int debug_summary_com = 0;
+int debug_summary_pass = 0;
+
 load_args get_base_args(network *net)
 {
     load_args args = {0};
@@ -241,19 +244,30 @@ void forward_network(network *netp)
         if(i > partition_point1 && i <= partition_point2)
         {
             // forward all the others in TEE
+            if(debug_summary_com == 1){
+                summary_array("forward_network / net.input", net.input, l.inputs*net.batch);
+            }
+
             forward_network_CA(net.input, l.inputs, net.batch, net.train);
-            i = partition_point2 + 1; // jump to further forward in CA
+
+            //i = partition_point2 + 1; // jump to further forward in CA
+            i = partition_point2;
 
             // receive parames (layer partition_point2's outputs) from TA
             if(partition_point2 < net.n - 1)
             {
                 layer l_pp2 = net.layers[partition_point2];
+
                 forward_network_back_CA(l_pp2.outputs, net.batch);
                 for(int z=0; z<l_pp2.outputs * net.batch; z++){
                     l_pp2.output[z] = net_input_back[z];
                 }
                 net.input = l_pp2.output;
                 free(net_input_back);
+
+                if(debug_summary_com == 1){
+                    summary_array("forward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                }
             }
 
         }else // forward in REE
@@ -264,6 +278,11 @@ void forward_network(network *netp)
             }
 
             l.forward(l, net);
+
+            if(debug_summary_pass == 1){
+                summary_array("forward_network / l.output", l.output, l.inputs*net.batch);
+            }
+
             net.input = l.output;
             if(l.truth) {
                 net.truth = l.output;
@@ -326,6 +345,10 @@ void calc_network_cost(network *netp)
     int i;
     float sum = 0;
     int count = 0;
+    // if(partition_point2 < net.n-1){ // leave softmax: thus only cost layer
+    //     sum += net.layers[net.n-1].cost[0];
+    //     ++count;
+    // }else{
     for(i = 0; i < net.n; ++i){
         if(net.layers[i].cost){
             sum += net.layers[i].cost[0];
@@ -333,6 +356,8 @@ void calc_network_cost(network *netp)
             ++count;
         }
     }
+    // }
+
     *net.cost = sum/count;
 }
 
@@ -383,6 +408,10 @@ void backward_network(network *netp)
                 }
                 free(net_input_back);
                 free(net_delta_back);
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_back_addidion / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                    summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
+                }
             }
         }
 
@@ -391,8 +420,12 @@ void backward_network(network *netp)
         // backward in the TEE
         if(i > partition_point1 && i <= partition_point2)
         {
-
+            if(debug_summary_com == 1){
+                summary_array("backward_network / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                summary_array("backward_network / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+            }
             backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, l_pp1.delta, net.train);
+
 
             backward_network_CA_addidion(l_pp1.outputs, net.batch);
 
@@ -403,6 +436,10 @@ void backward_network(network *netp)
             free(net_input_back);
             free(net_delta_back);
 
+            if(debug_summary_com == 1){
+                summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                summary_array("backward_network_addidion / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+            }
             if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
 
             i = partition_point1 + 1;
@@ -414,6 +451,10 @@ void backward_network(network *netp)
             // pass pp2 outputs and delta back to TEE
             if(i == partition_point2+1)
             {
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                    summary_array("backward_network_back / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
+                }
                 backward_network_back_CA(l_pp2.output, l_pp2.outputs, net.batch, l_pp2.delta);
             }
         }

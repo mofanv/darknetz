@@ -87,4 +87,6 @@ void save_weights_CA(float *vec, int length, int layer_i, char type);
 
 void backward_network_CA_addidion(int net_inputs, int net_batch);
 
+void summary_array(char *print_name, float *arr, int n);
+
 #endif

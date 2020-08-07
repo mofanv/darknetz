@@ -61,6 +61,36 @@ void debug_plot(char *filename, int num, float *tobeplot, int length)
     free(result);
 }
 
+
+void summary_array(char *print_name, float *arr, int n)
+{
+
+    float sum=0, min, max, idxzero=0;
+
+    for(int i=0; i<n; i++)
+    {
+        sum = sum + arr[i];
+        if (i == 0){
+            min = arr[i];
+            max = arr[i];
+        }
+        if (arr[i] < min){
+            min = arr[i];
+        }
+        if (arr[i] > max){
+            max = arr[i];
+        }
+        if (arr[i] == 0){
+           idxzero++;
+        }
+    }
+
+    float mean=0;
+    mean = sum / n;
+    printf("%s || mean = %f; min=%f; max=%f; number of zeros=%f \n", print_name, mean, min, max, idxzero);
+}
+
+
 void make_network_CA(int n, float learning_rate, float momentum, float decay, int time_steps, int notruth, int batch, int subdivisions, int random, int adam, float B1, float B2, float eps, int h, int w, int c, int inputs, int max_crop, int min_crop, float max_ratio, float min_ratio, int center, float clip, float angle, float aspect, float saturation, float exposure, float hue, int burn_in, float power, int max_batches)
 {
   TEEC_Operation op;

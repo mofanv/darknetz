@@ -22,6 +22,48 @@
 
 float *netta_truth;
 int netnum = 0;
+int debug_summary_com = 0;
+int debug_summary_pass = 0;
+
+
+void summary_array(char *print_name, float *arr, int n)
+{
+
+    float sum=0, min, max, idxzero=0;
+
+    for(int i=0; i<n; i++)
+    {
+        sum = sum + arr[i];
+        if (i == 0){
+            min = arr[i];
+            max = arr[i];
+        }
+        if (arr[i] < min){
+            min = arr[i];
+        }
+        if (arr[i] > max){
+            max = arr[i];
+        }
+        if (arr[i] == 0){
+           idxzero++;
+        }
+    }
+
+    float mean=0;
+    mean = sum / n;
+
+    char mean_char[20];
+    char min_char[20];
+    char max_char[20];
+    char idxzero_char[20];
+    ftoa(mean, mean_char, 5);
+    ftoa(min, min_char, 5);
+    ftoa(max, max_char, 5);
+    ftoa(idxzero, idxzero_char, 5);
+
+    DMSG("%s || mean = %s; min=%s; max=%s; number of zeros=%s \n", print_name, mean_char, min_char, max_char, idxzero_char);
+}
+
 
 TEE_Result TA_CreateEntryPoint(void)
 {
@@ -434,6 +476,9 @@ static TEE_Result forward_network_TA_params(uint32_t param_types,
     netta.input = net_input;
     netta.train = net_train;
 
+    if(debug_summary_com == 1){
+        summary_array("forward_network / net.input", netta.input, params[0].memref.size / sizeof(float));
+    }
     forward_network_TA();
 
     return TEE_SUCCESS;
@@ -484,7 +529,9 @@ static TEE_Result forward_network_back_TA_params(uint32_t param_types,
 
     // ?????
     //free(ta_net_input);
-
+    if(debug_summary_com == 1){
+        summary_array("forward_network_back / l_pp2.output", netta.layers[netta.n-1].output, buffersize);
+    }
     return TEE_SUCCESS;
 }
 
@@ -541,6 +588,10 @@ static TEE_Result backward_network_TA_params(uint32_t param_types,
 
     netta.train = net_train;
 
+    if(debug_summary_com == 1){
+        summary_array("backward_network / l_pp1.output", params0, params[0].memref.size / sizeof(float));
+        summary_array("backward_network / l_pp1.delta", params1, params[1].memref.size / sizeof(float));
+    }
     backward_network_TA(params0, params1);
 
     return TEE_SUCCESS;
@@ -569,9 +620,15 @@ static TEE_Result backward_network_TA_addidion_params(uint32_t param_types,
         params0[z] = ta_net_input[z];
         params1[z] = ta_net_delta[z];
     }
-
+    //free(ta_net_input);
+    //free(ta_net_delta);
     //free(ltaoutput_diff);
     //free(ltadelta_diff);
+
+    if(debug_summary_com == 1){
+        summary_array("backward_network_addidion / l_pp1.output", ta_net_input, buffersize);
+        summary_array("backward_network_addidion / l_pp1.delta", ta_net_delta, buffersize);
+    }
     return TEE_SUCCESS;
 }
 
@@ -601,6 +658,11 @@ static TEE_Result backward_network_back_TA_params(uint32_t param_types,
         netta.layers[netta.n - 1].delta[z] = params1[z];
     }
 
+    if(debug_summary_com == 1){
+        summary_array("backward_network_back / l_pp2.output", netta.layers[netta.n - 1].output, buffersize);
+        summary_array("backward_network_back / l_pp2.delta", netta.layers[netta.n - 1].delta, buffersize);
+    }
+
     return TEE_SUCCESS;
 }
 
@@ -619,12 +681,16 @@ static TEE_Result backward_network_back_TA_addidion_params(uint32_t param_types,
     float *params0 = params[0].memref.buffer;
     float *params1 = params[1].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
-    
+
     for(int z=0; z<buffersize; z++){
         params0[z] = netta.layers[netta.n - 1].output[z];
         params1[z] = netta.layers[netta.n - 1].delta[z];
     }
 
+    if(debug_summary_com == 1){
+        summary_array("backward_network_back_addidion / l_pp2.output", netta.layers[netta.n - 1].output, buffersize);
+        summary_array("backward_network_back_addidion / l_pp2.delta", netta.layers[netta.n - 1].delta, buffersize);
+    }
     return TEE_SUCCESS;
 }
 //
@@ -665,7 +731,7 @@ static TEE_Result update_network_TA_params(uint32_t param_types,
     //TEE_PARAM_TYPE_VALUE_INPUT
 
     //DMSG("has been called");
-
+    //mdbg_check(1);
     if (param_types != exp_param_types)
     return TEE_ERROR_BAD_PARAMETERS;
 
@@ -684,9 +750,6 @@ static TEE_Result update_network_TA_params(uint32_t param_types,
     a.eps = params1[5];
 
     update_network_TA(a);
-
-    free(ta_net_input);
-    free(ta_net_delta);
 
     return TEE_SUCCESS;
 }
