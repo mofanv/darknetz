@@ -933,7 +933,7 @@ network *parse_network_cfg(char *filename)
     net->truth_gpu = cuda_make_array(net->truth, net->truths*net->batch);
 #endif
     if(workspace_size){
-        //printf("workspace_size=%ld\n", workspace_size);
+        printf("workspace_size=%ld\n", workspace_size);
 #ifdef GPU
         if(gpu_index >= 0){
             net->workspace = cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);

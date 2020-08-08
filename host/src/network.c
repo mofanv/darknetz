@@ -236,11 +236,17 @@ void forward_network(network *netp)
 #endif
     network net = *netp;
 
+    // have Conv across or not
+    // if(wssize == -1)  {
+        // wssize = workspaceBOO(net);
+        // if(wssize) update_net_agrv_CA_allocateSM(wssize, net.workspace);
+    // }
+    //if(wssize)  update_net_agrv_CA(0, wssize, net.workspace);
+
     int i;
     for(i = 0; i < net.n; ++i){
         net.index = i;
         layer l = net.layers[i];
-
         if(i > partition_point1 && i <= partition_point2)
         {
             // forward all the others in TEE
@@ -249,6 +255,7 @@ void forward_network(network *netp)
             }
 
             forward_network_CA(net.input, l.inputs, net.batch, net.train);
+            //if(wssize)  workspace_CA(wssize, net.workspace);
 
             //i = partition_point2 + 1; // jump to further forward in CA
             i = partition_point2;
@@ -287,12 +294,6 @@ void forward_network(network *netp)
             if(l.truth) {
                 net.truth = l.output;
             }
-
-            if(wssize == -1)  {
-              wssize = workspaceBOO(net);
-              if(wssize) update_net_agrv_CA_allocateSM(wssize, net.workspace);
-            }
-            if(wssize)  update_net_agrv_CA(0, wssize, net.workspace);
         }
     }
 
@@ -330,7 +331,7 @@ void update_network(network *netp)
             if(i > partition_point1 && i <= partition_point2)
             {
                 update_network_CA(a);
-                i = partition_point2 + 1; // jump to further update in CA
+                i = partition_point2; // jump to further update in CA
             }else
             {
                 l.update(l, a);
@@ -440,7 +441,7 @@ void backward_network(network *netp)
                 summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
                 summary_array("backward_network_addidion / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
             }
-            if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
+            //if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
 
             i = partition_point1 + 1;
 

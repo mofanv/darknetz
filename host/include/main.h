@@ -81,6 +81,8 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch);
 
 void calc_network_loss_CA(int n, int batch);
 
+void net_output_return_CA(int net_outputs, int net_batch);
+
 void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional);
 
 void save_weights_CA(float *vec, int length, int layer_i, char type);

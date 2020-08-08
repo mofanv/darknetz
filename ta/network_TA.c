@@ -59,6 +59,7 @@ void make_network_TA(int n, float learning_rate, float momentum, float decay, in
     netta.burn_in = burn_in;
     netta.power = power;
     netta.max_batches = max_batches;
+    netta.workspace_size = 0;
 
     //netta.truth = net->truth; ////// ing network.c train_network
 }
@@ -69,6 +70,11 @@ void forward_network_TA()
         // ta_net_input malloc so not destroy before addition backward
         ta_net_input = malloc(sizeof(float)* netta.layers[0].inputs * netta.layers[0].batch);
         ta_net_delta = malloc(sizeof(float) * netta.layers[0].inputs * netta.layers[0].batch);
+
+        if(netta.workspace_size){
+            printf("workspace_size=%ld\n", netta.workspace_size);
+            netta.workspace = calloc(1, netta.workspace_size);
+        }
     }
 
     roundnum++;

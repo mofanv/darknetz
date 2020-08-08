@@ -214,6 +214,7 @@ static TEE_Result make_convolutional_layer_TA_params(uint32_t param_types,
 
     layer_TA lta = make_convolutional_layer_TA_new(batch, h, w, c, n, groups, size, stride, padding, activation, batch_normalize, binary, xnor, adam, flipped, dot);
     netta.layers[netnum] = lta;
+    if (lta.workspace_size > netta.workspace_size) netta.workspace_size = lta.workspace_size;
     netnum++;
 
     return TEE_SUCCESS;
@@ -454,6 +455,7 @@ static TEE_Result save_weights_TA_params(uint32_t param_types,
     free(weights_encrypted);
     return TEE_SUCCESS;
 }
+
 
 
 static TEE_Result forward_network_TA_params(uint32_t param_types,
@@ -731,7 +733,7 @@ static TEE_Result update_network_TA_params(uint32_t param_types,
     //TEE_PARAM_TYPE_VALUE_INPUT
 
     //DMSG("has been called");
-    //mdbg_check(1);
+
     if (param_types != exp_param_types)
     return TEE_ERROR_BAD_PARAMETERS;
 
@@ -750,6 +752,7 @@ static TEE_Result update_network_TA_params(uint32_t param_types,
     a.eps = params1[5];
 
     update_network_TA(a);
+    mdbg_check(1);
 
     return TEE_SUCCESS;
 }
