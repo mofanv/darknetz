@@ -69,7 +69,7 @@ void forward_network_back_CA(int net_inputs, int net_batch);
 
 void backward_network_CA_addidion(int net_inputs, int net_batch);
 
-void backward_network_CA(float *net_input, int l_inputs, int batch, float *net_delta, int net_train);
+void backward_network_CA(float *net_input, int l_inputs, int batch, int net_train);
 
 void backward_network_back_CA_addidion(int net_inputs, int net_batch);
 

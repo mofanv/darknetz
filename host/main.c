@@ -22,6 +22,7 @@ float *net_delta_back;
 float *net_output_back;
 int sysCount = 0;
 char state;
+int debug_plot_bool = 0;
 
 void debug_plot(char *filename, int num, float *tobeplot, int length)
 {
@@ -305,9 +306,12 @@ void make_dropout_layer_CA(int batch, int inputs, float probability, int w, int 
     op.params[1].tmpref.buffer = passflo;
     op.params[1].tmpref.size = sizeof(float)*1;
 
-////////////////////////
-    //debug_plot("net_prev_output", sysCount, net_prev_output, inputs*batch);
-    //debug_plot("net_prev_delta", sysCount, net_prev_delta, inputs*batch);
+
+    if(debug_plot_bool == 1){
+        debug_plot("net_prev_output", sysCount, net_prev_output, inputs*batch);
+        debug_plot("net_prev_delta", sysCount, net_prev_delta, inputs*batch);
+    }
+
 
     op.params[2].tmpref.buffer = net_prev_output;
     op.params[2].tmpref.size = sizeof(float)*inputs*batch;
@@ -502,6 +506,7 @@ void save_weights_CA(float *vec, int length, int layer_i, char type)
 }
 
 
+
 void forward_network_CA(float *net_input, int l_inputs, int net_batch, int net_train)
 {
     //invoke op and transfer paramters
@@ -524,8 +529,9 @@ void forward_network_CA(float *net_input, int l_inputs, int net_batch, int net_t
     op.params[1].value.a = params1;
 
     /////////  debug_plot  /////////
-    debug_plot("forward_net_input_", sysCount, params0, l_inputs*net_batch);
-
+    if(debug_plot_bool == 1){
+        debug_plot("forward_net_input_", sysCount, params0, l_inputs*net_batch);
+    }
     res = TEEC_InvokeCommand(&sess, FORWARD_CMD,
                              &op, &origin);
 
@@ -559,8 +565,9 @@ void forward_network_back_CA(int net_inputs, int net_batch)
                             &op, &origin);
 
    /////////  debug_plot  /////////
-   debug_plot("forward_net_back_input_", sysCount, net_input_back, net_inputs*net_batch);
-
+   if(debug_plot_bool == 1){
+       debug_plot("forward_net_back_input_", sysCount, net_input_back, net_inputs*net_batch);
+   }
    if (res != TEEC_SUCCESS)
    errx(1, "TEEC_InvokeCommand(forward_add) failed 0x%x origin 0x%x",
         res, origin);
@@ -569,7 +576,7 @@ void forward_network_back_CA(int net_inputs, int net_batch)
 
 
 
-void backward_network_CA(float *net_input, int l_inputs, int net_batch, float *net_delta, int net_train)
+void backward_network_CA(float *net_input, int l_inputs, int net_batch, int net_train)
 {
     //invoke op and transfer paramters
     TEEC_Operation op;
@@ -578,22 +585,23 @@ void backward_network_CA(float *net_input, int l_inputs, int net_batch, float *n
 
 
     memset(&op, 0, sizeof(op));
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
-                                     TEEC_VALUE_INPUT, TEEC_NONE);
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT,
+                                     TEEC_NONE, TEEC_NONE);
 
      float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
-     float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
+     //float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
 
      for(int z=0; z<l_inputs*net_batch; z++){
          params0[z] = net_input[z];
-         params1[z] = net_delta[z];
+         //params1[z] = net_delta[z];
      }
 
     op.params[0].tmpref.buffer = params0; // as lta.output
     op.params[0].tmpref.size = sizeof(float)*l_inputs*net_batch;
-    op.params[1].tmpref.buffer = params1; // as n_delta
-    op.params[1].tmpref.size = sizeof(float)*l_inputs*net_batch;
-    op.params[2].value.a = net_train;
+    //op.params[1].tmpref.buffer = params1; // as n_delta
+    //op.params[1].tmpref.size = sizeof(float)*l_inputs*net_batch;
+    //op.params[2].value.a = net_train;
+    op.params[1].value.a = net_train;
 
     res = TEEC_InvokeCommand(&sess, BACKWARD_CMD,
                              &op, &origin);
@@ -603,11 +611,12 @@ void backward_network_CA(float *net_input, int l_inputs, int net_batch, float *n
          res, origin);
 
      /////////  debug_plot  /////////
-    debug_plot("backward_net_input_", sysCount, params0, l_inputs*net_batch);
-    debug_plot("backward_net_delta_", sysCount, params1, l_inputs*net_batch);
-
+   if(debug_plot_bool == 1){
+       debug_plot("backward_net_input_", sysCount, params0, l_inputs*net_batch);
+       //debug_plot("backward_net_delta_", sysCount, params1, l_inputs*net_batch); // zero, removing!
+   }
    free(params0);
-   free(params1);
+   //free(params1);
 }
 
 
@@ -619,12 +628,6 @@ void backward_network_CA_addidion(int net_inputs, int net_batch)
 
   net_input_back = malloc(sizeof(float) * net_inputs*net_batch);
   net_delta_back = malloc(sizeof(float) * net_inputs*net_batch);
-
-
-  /////////  debug_plot  /////////
-  //debug_plot("backward_net_input_back1_", sysCount, net_input_back, net_inputs*net_batch);
-  //debug_plot("backward_net_delta_back1_", sysCount, net_delta_back, net_inputs*net_batch);
-
 
   memset(&op, 0, sizeof(op));
   op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_OUTPUT,
@@ -641,9 +644,10 @@ void backward_network_CA_addidion(int net_inputs, int net_batch)
                             &op, &origin);
 
     /////////  debug_plot  /////////
-    debug_plot("backward_net_add_input_", sysCount, net_input_back, net_inputs*net_batch);
-    debug_plot("backward_net_add_delta_", sysCount, net_delta_back, net_inputs*net_batch);
-
+   if(debug_plot_bool == 1){
+       debug_plot("backward_net_add_input_", sysCount, net_input_back, net_inputs*net_batch);
+       debug_plot("backward_net_add_delta_", sysCount, net_delta_back, net_inputs*net_batch);
+   }
    if (res != TEEC_SUCCESS)
    errx(1, "TEEC_InvokeCommand(backward_add) failed 0x%x origin 0x%x",
         res, origin);
@@ -663,22 +667,19 @@ void backward_network_back_CA(float *net_input, int l_inputs, int net_batch, flo
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT,
                                      TEEC_NONE, TEEC_NONE);
 
-     float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
-     float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
+    float *params0 = malloc(sizeof(float)*l_inputs*net_batch);
+    float *params1 = malloc(sizeof(float)*l_inputs*net_batch);
+
+    for(int z=0; z<l_inputs*net_batch; z++){
+        params0[z] = net_input[z];
+        params1[z] = net_delta[z];
+    }
 
      /////////  debug_plot  /////////
-     // debug_plot("backward_net_input_back1_", sysCount, params0, l_inputs*net_batch);
-     // debug_plot("backward_net_delta_back1_", sysCount, params1, l_inputs*net_batch);
-
-     for(int z=0; z<l_inputs*net_batch; z++){
-         params0[z] = net_input[z];
-         params1[z] = net_delta[z];
-     }
-
-     /////////  debug_plot  /////////
-     debug_plot("backward_net_back_input_", sysCount, params0, l_inputs*net_batch);
-     debug_plot("backward_net_back_delta_", sysCount, params1, l_inputs*net_batch);
-
+    if(debug_plot_bool == 1){
+        debug_plot("backward_net_back_input_", sysCount, params0, l_inputs*net_batch);
+        debug_plot("backward_net_back_delta_", sysCount, params1, l_inputs*net_batch);
+    }
     op.params[0].tmpref.buffer = params0; // as lta.output
     op.params[0].tmpref.size = sizeof(float)*l_inputs*net_batch;
     op.params[1].tmpref.buffer = params1; // as n_delta
@@ -704,31 +705,28 @@ void backward_network_back_CA_addidion(int net_inputs, int net_batch)
   TEEC_Result res;
 
   net_input_back = malloc(sizeof(float) * net_inputs*net_batch);
-  net_delta_back = malloc(sizeof(float) * net_inputs*net_batch);
-
-  /////////  debug_plot  /////////
-  // debug_plot("backward_add_net_input_back1_", sysCount, net_input_back, net_inputs*net_batch);
-  // debug_plot("backward_add_net_delta_back1_", sysCount, net_delta_back, net_inputs*net_batch);
+  //net_delta_back = malloc(sizeof(float) * net_inputs*net_batch);
 
 
   memset(&op, 0, sizeof(op));
-  op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_OUTPUT,
+  op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_NONE,
                                    TEEC_NONE, TEEC_NONE);
 
 
 
    op.params[0].tmpref.buffer = net_input_back;
    op.params[0].tmpref.size = sizeof(float) * net_inputs*net_batch;
-   op.params[1].tmpref.buffer = net_delta_back;
-   op.params[1].tmpref.size = sizeof(float) * net_inputs*net_batch;
+   //op.params[1].tmpref.buffer = net_delta_back;
+   //op.params[1].tmpref.size = sizeof(float) * net_inputs*net_batch;
 
    res = TEEC_InvokeCommand(&sess, BACKWARD_BACK_ADD_CMD,
                             &op, &origin);
 
    /////////  debug_plot  /////////
-   debug_plot("backward_add_back_net_input_", sysCount, net_input_back, net_inputs*net_batch);
-   debug_plot("backward_add_back_net_delta_", sysCount, net_delta_back, net_inputs*net_batch);
-
+   if(debug_plot_bool == 1){
+       debug_plot("backward_add_back_net_input_", sysCount, net_input_back, net_inputs*net_batch);
+       //debug_plot("backward_add_back_net_delta_", sysCount, net_delta_back, net_inputs*net_batch); //zeros, removing!!
+   }
 
    if (res != TEEC_SUCCESS)
    errx(1, "TEEC_InvokeCommand(backward_back_add) failed 0x%x origin 0x%x",
@@ -803,8 +801,9 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch)
          res, origin);
 
      /////////  debug_plot  /////////
-     //debug_plot("backward_net_truth_", sysCount, net_truth, net_truths*net_batch);
-
+    if(debug_plot_bool == 1){
+        debug_plot("backward_net_truth_", sysCount, net_truth, net_truths*net_batch);
+    }
     free(params0);
 }
 

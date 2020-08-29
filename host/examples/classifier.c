@@ -1269,9 +1269,9 @@ void run_classifier(int argc, char **argv)
         int *gpus = read_intlist(gpu_list, &ngpus, gpu_index);
 
         // partition point of DNN
-        int pp_start = find_int_arg(argc, argv, "-pp_start", 5);
+        int pp_start = find_int_arg(argc, argv, "-pp_start", 1000);
         partition_point1 = pp_start - 1;
-        int pp_end = find_int_arg(argc, argv, "-pp_end", 7);
+        int pp_end = find_int_arg(argc, argv, "-pp_end", 1000);
         partition_point2 = pp_end;
         int dp = find_int_arg(argc, argv, "-dp", -1);
         global_dp = dp;

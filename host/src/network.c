@@ -405,13 +405,14 @@ void backward_network(network *netp)
 
                 for(int z=0; z<l_pp2.outputs * net.batch; z++){
                     l_pp2.output[z] = net_input_back[z];
-                    l_pp2.delta[z] = net_delta_back[z];
+                    //l_pp2.delta[z] = net_delta_back[z];
+                    l_pp2.delta[z] = 0.0f;
                 }
                 free(net_input_back);
-                free(net_delta_back);
+                //free(net_delta_back);
                 if(debug_summary_com == 1){
                     summary_array("backward_network_back_addidion / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
-                    summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
+                    //summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
                 }
             }
         }
@@ -425,7 +426,8 @@ void backward_network(network *netp)
                 summary_array("backward_network / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
                 summary_array("backward_network / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
             }
-            backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, l_pp1.delta, net.train);
+            //backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, l_pp1.delta, net.train);
+            backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
 
 
             backward_network_CA_addidion(l_pp1.outputs, net.batch);

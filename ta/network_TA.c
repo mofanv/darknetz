@@ -165,7 +165,8 @@ void calc_network_loss_TA(int n, int batch)
 
 
 
-void backward_network_TA(float *ca_net_input, float *ca_net_delta)
+//void backward_network_TA(float *ca_net_input, float *ca_net_delta)
+void backward_network_TA(float *ca_net_input)
 {
     int i;
 
@@ -177,7 +178,8 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
             for(int z=0; z<l.inputs*l.batch; z++){
              // note: both ca_net_input and ca_net_delta are pointer
                 ta_net_input[z] = ca_net_input[z];
-                ta_net_delta[z] = ca_net_delta[z];
+                //ta_net_delta[z] = ca_net_delta[z]; zeros removing
+                ta_net_delta[z] = 0.0f;
             }
 
             netta.input = ta_net_input;

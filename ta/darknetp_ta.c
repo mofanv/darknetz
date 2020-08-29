@@ -574,8 +574,8 @@ static TEE_Result backward_network_TA_params(uint32_t param_types,
 
 
     uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_INPUT,
-                                               TEE_PARAM_TYPE_MEMREF_INPUT,
                                                TEE_PARAM_TYPE_VALUE_INPUT,
+                                               TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE);
     //TEE_PARAM_TYPE_VALUE_INPUT
 
@@ -585,16 +585,17 @@ static TEE_Result backward_network_TA_params(uint32_t param_types,
     return TEE_ERROR_BAD_PARAMETERS;
 
     float *params0 = params[0].memref.buffer;
-    float *params1 = params[1].memref.buffer;
-    int net_train = params[2].value.a;
+    //float *params1 = params[1].memref.buffer;
+    int net_train = params[1].value.a;
 
     netta.train = net_train;
 
     if(debug_summary_com == 1){
         summary_array("backward_network / l_pp1.output", params0, params[0].memref.size / sizeof(float));
-        summary_array("backward_network / l_pp1.delta", params1, params[1].memref.size / sizeof(float));
+        //summary_array("backward_network / l_pp1.delta", params1, params[1].memref.size / sizeof(float));
     }
-    backward_network_TA(params0, params1);
+    //backward_network_TA(params0, params1); //zeros, removing
+    backward_network_TA(params0);
 
     return TEE_SUCCESS;
 }
@@ -674,24 +675,24 @@ static TEE_Result backward_network_back_TA_addidion_params(uint32_t param_types,
                                            TEE_Param params[4])
 {
     uint32_t exp_param_types = TEE_PARAM_TYPES( TEE_PARAM_TYPE_MEMREF_OUTPUT,
-                                               TEE_PARAM_TYPE_MEMREF_OUTPUT,
+                                               TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE,
                                                TEE_PARAM_TYPE_NONE);
     if (param_types != exp_param_types)
         return TEE_ERROR_BAD_PARAMETERS;
 
     float *params0 = params[0].memref.buffer;
-    float *params1 = params[1].memref.buffer;
+    //float *params1 = params[1].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
 
     for(int z=0; z<buffersize; z++){
         params0[z] = netta.layers[netta.n - 1].output[z];
-        params1[z] = netta.layers[netta.n - 1].delta[z];
+        //params1[z] = netta.layers[netta.n - 1].delta[z]; zeros, removing
     }
 
     if(debug_summary_com == 1){
         summary_array("backward_network_back_addidion / l_pp2.output", netta.layers[netta.n - 1].output, buffersize);
-        summary_array("backward_network_back_addidion / l_pp2.delta", netta.layers[netta.n - 1].delta, buffersize);
+        //summary_array("backward_network_back_addidion / l_pp2.delta", netta.layers[netta.n - 1].delta, buffersize);
     }
     return TEE_SUCCESS;
 }
