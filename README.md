@@ -142,6 +142,8 @@ For defending potential attacks (e.g. membership inference), the cost function i
 
 More functions to be added ;)
 
+(see developer branch for more functions)
+
 # License
 ```
 MIT License

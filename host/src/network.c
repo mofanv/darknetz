@@ -383,7 +383,6 @@ void backward_network(network *netp)
     int i;
     network orig = net;
 
-    layer l_pp1 = net.layers[partition_point1];
     layer l_pp2 = net.layers[partition_point2];
 
     for(i = net.n-1; i >= 0; --i){
@@ -422,28 +421,34 @@ void backward_network(network *netp)
         // backward in the TEE
         if(i > partition_point1 && i <= partition_point2)
         {
-            if(debug_summary_com == 1){
-                summary_array("backward_network / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
-                summary_array("backward_network / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+            // NOT all layers are in TEE
+            if (partition_point1+1 > 0){
+                layer l_pp1 = net.layers[partition_point1];
+
+                if(debug_summary_com == 1){
+                    summary_array("backward_network / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                    summary_array("backward_network / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+                }
+
+                backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
+
+                backward_network_CA_addidion(l_pp1.outputs, net.batch);
+
+                for(int z=0; z<l_pp1.outputs * net.batch; z++){
+                    l_pp1.output[z] = net_input_back[z];
+                    l_pp1.delta[z] = net_delta_back[z];
+                }
+                free(net_input_back);
+                free(net_delta_back);
+
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                    summary_array("backward_network_addidion / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+                }
+
+            }else{
+                backward_network_CA(net.input, net.layers[0].inputs, net.batch, net.train);
             }
-            //backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, l_pp1.delta, net.train);
-            backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
-
-
-            backward_network_CA_addidion(l_pp1.outputs, net.batch);
-
-            for(int z=0; z<l_pp1.outputs * net.batch; z++){
-                l_pp1.output[z] = net_input_back[z];
-                l_pp1.delta[z] = net_delta_back[z];
-            }
-            free(net_input_back);
-            free(net_delta_back);
-
-            if(debug_summary_com == 1){
-                summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
-                summary_array("backward_network_addidion / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
-            }
-            //if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
 
             i = partition_point1 + 1;
 

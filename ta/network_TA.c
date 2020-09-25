@@ -68,7 +68,7 @@ void forward_network_TA()
 {
     if(roundnum == 0){
         // ta_net_input malloc so not destroy before addition backward
-        ta_net_input = malloc(sizeof(float)* netta.layers[0].inputs * netta.layers[0].batch);
+        ta_net_input = malloc(sizeof(float) * netta.layers[0].inputs * netta.layers[0].batch);
         ta_net_delta = malloc(sizeof(float) * netta.layers[0].inputs * netta.layers[0].batch);
 
         if(netta.workspace_size){
@@ -203,5 +203,4 @@ void backward_network_TA(float *ca_net_input)
             //netta.delta = l.delta;
         }
     }
-    //backward_network_back_TA_params(netta.input, netta.delta, netta.layers[0].inputs, netta.batch);
 }

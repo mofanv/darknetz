@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-// server
+// client side
 
 //读写数据大小
 #define MAX_LINE 4096
