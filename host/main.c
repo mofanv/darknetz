@@ -99,6 +99,7 @@ void make_network_CA(int n, float learning_rate, float momentum, float decay, in
   TEEC_Result res;
 
     int passint[17];
+
     passint[0] = n;
     passint[1] = time_steps;
     passint[2] = notruth;

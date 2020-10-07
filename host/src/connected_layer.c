@@ -136,6 +136,8 @@ layer make_connected_layer(int batch, int inputs, int outputs, ACTIVATION activa
     return l;
 }
 
+
+
 void update_connected_layer(layer l, update_args a)
 {
     float learning_rate = a.learning_rate*l.learning_rate_scale;

@@ -217,6 +217,7 @@ int workspaceBOO(network net)
         }
    }
 
+
    if(untrusted_has_conv & trusted_has_conv)
    {
           return workspace_size;
@@ -247,6 +248,7 @@ void forward_network(network *netp)
     for(i = 0; i < net.n; ++i){
         net.index = i;
         layer l = net.layers[i];
+
         if(i > partition_point1 && i <= partition_point2)
         {
             // forward all the others in TEE
@@ -339,6 +341,7 @@ void update_network(network *netp)
         }
     }
 }
+
 
 void calc_network_cost(network *netp)
 {
@@ -470,6 +473,8 @@ void backward_network(network *netp)
     //free(ca_prev_last_layer_input);
     //free(ca_prev_last_layer_delta);
 }
+
+
 
 float train_network_datum(network *net)
 {
@@ -729,6 +734,7 @@ float *network_predict(network *net, float *input)
      *net = orig;
      return out;
 }
+
 
 int num_detections(network *net, float thresh)
 {

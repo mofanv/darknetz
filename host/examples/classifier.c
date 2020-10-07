@@ -308,6 +308,10 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
         free(base);
 }
 
+
+
+
+
 void validate_classifier_crop(char *datacfg, char *filename, char *weightfile)
 {
         int i = 0;
@@ -699,6 +703,9 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
         }
 }
 
+
+
+
 void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
         network *net = load_network(cfgfile, weightfile, 0);
@@ -809,6 +816,9 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
                 if (filename) break;
         }
 }
+
+
+
 
 
 void label_classifier(char *datacfg, char *filename, char *weightfile)
@@ -1257,6 +1267,7 @@ void demo_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_ind
 }
 
 
+
 void run_classifier(int argc, char **argv)
 {
         if(argc < 4) {
@@ -1305,3 +1316,4 @@ void run_classifier(int argc, char **argv)
         else if(0==strcmp(argv[2], "validcrop")) validate_classifier_crop(data, cfg, weights);
         else if(0==strcmp(argv[2], "validfull")) validate_classifier_full(data, cfg, weights);
 }
+

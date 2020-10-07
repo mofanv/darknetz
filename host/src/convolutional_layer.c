@@ -342,6 +342,8 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     return l;
 }
 
+
+
 void denormalize_convolutional_layer(convolutional_layer l)
 {
     int i, j;
