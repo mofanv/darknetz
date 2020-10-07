@@ -44,12 +44,12 @@ xtest
 git clone https://github.com/mofanv/darknetz.git
 git clone https://github.com/mofanv/tz_datasets.git
 ```
-Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
+Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetz$` be the path of darknetz, and `$PATH_tz_datasets$` be the path of tz_datasets.
 
 2) copy DarkneTZ to example dir
 ```
-mkdir $PATH_OPTEE$/optee_examples/darknetp
-cp -a $PATH_darknetp$/. $PATH_OPTEE$/optee_examples/darknetp/
+mkdir $PATH_OPTEE$/optee_examples/darknetz
+cp -a $PATH_darknetz$/. $PATH_OPTEE$/optee_examples/darknetz/
 ```
 
 3) copy datasets to root dir
@@ -61,15 +61,17 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For simulation**, to run `make run` again.
 
-**For real boards**, to run `make flash` to flash the OP-TEE with `` to your device.
+**For real boards**, to run `make flash` to flash the OP-TEE with `darknetz` to your device.
 
-5) after boot your devices or QEMU, to test by the command
+5) after boot your devices or QEMU, to test by the command 
 ```
 darknetp
 ```
+Note: It is NOT `darknetz` here for the command.
+
 You should get the output:
  ```
-# usage: ./darknet <function>
+# usage: ./darknetp <function>
  ```
 Awesome! You are ready to run DNN layers in TrustZone.
 
@@ -77,9 +79,9 @@ Awesome! You are ready to run DNN layers in TrustZone.
 
 1) To train a model from scratch 
 ```
-darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg
+darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg
 ```
-You can choose the partition point of layers in the TEE by adjusting the argument `-pp`.
+You can choose the partition point of layers in the TEE by adjusting the argument `-pp_start` and `-pp_end`. Any seqenuce layers (first, middle, or last layers) can be put inside the TEE.
 
 You will see output from the Normal World like this:
 ```
@@ -108,7 +110,7 @@ You will see output from the Normal World like this:
 ...
 ```
 
-Layers with `_TA` are running in the TrustZone. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted World. The output from the Trusted World is like this:
+Layers with `_TA` are running in the TrustZone. When the last layer is inside the TEE, you will not see the loss in Normal World. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Secure World. That is, the output from the Secure World is like this:
 ```
 # I/TA:  loss = 1.62141, avg loss = 1.62540 from the TA
 # I/TA:  loss = 1.58659, avg loss = 1.61783 from the TA
@@ -121,18 +123,20 @@ Layers with `_TA` are running in the TrustZone. The training loss is calculated 
 
 You can also load a pre-trained model into both Normal World and Secure World and then fine-tune the model, by commands:
 ```
-darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights
+darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights
 ```
 
-(Note: the Secure World only accepts a model that has been trained using the same `-pp` value, since layers are encrypted when they are transferred back to save and layers will be decrypted when deploying into the Trustzone)
+~~(Note: the Secure World only accepts a model that has been trained using the same `-pp` value, since layers are encrypted when they are transferred back to save and layers will be decrypted when deploying into the Trustzone)~~
+(Note: The encryption and decrytion when layers go in and out the TEE have been disabled considering it is only for simulation here)
+
 
 # Inference
 
 By simply typing the following command, you can do inference using a pre-trained model.
 ```
-darknetp classifier predict -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
+darknetp classifier predict -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
 ```
-For defending potential attacks (e.g. membership inference), the cost function is always in the TEE. Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
+When the layer is inside the TEE, we want to hide the output in some ways as well (for defending potential attacks (e.g. membership inference)). Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
 
 ```
 100.00%: 3
@@ -143,8 +147,6 @@ For defending potential attacks (e.g. membership inference), the cost function i
 ```
 
 More functions to be added ;)
-
-(see developer branch for more functions)
 
 # License
 ```
