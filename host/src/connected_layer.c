@@ -120,19 +120,19 @@ layer make_connected_layer(int batch, int inputs, int outputs, ACTIVATION activa
 #ifdef CUDNN
         cudnnCreateTensorDescriptor(&l.normTensorDesc);
         cudnnCreateTensorDescriptor(&l.dstTensorDesc);
-        cudnnSetTensor4dDescriptor(l.dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l.batch, l.out_c, l.out_h, l.out_w); 
-        cudnnSetTensor4dDescriptor(l.normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l.out_c, 1, 1); 
+        cudnnSetTensor4dDescriptor(l.dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l.batch, l.out_c, l.out_h, l.out_w);
+        cudnnSetTensor4dDescriptor(l.normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l.out_c, 1, 1);
 #endif
     }
 #endif
     l.activation = activation;
     
-    if(count_global <= partition_point){
+    if(count_global <= partition_point2){
         fprintf(stderr, "connected                            %4d  ->  %4d\n", inputs, outputs);
     }else{
         fprintf(stderr, "connected_TA                         %4d  ->  %4d\n", inputs, outputs);
     }
-    
+
     return l;
 }
 
@@ -157,7 +157,7 @@ void update_connected_layer(layer l, update_args a)
 
 void forward_connected_layer(layer l, network net)
 {
-    
+
     fill_cpu(l.outputs*l.batch, 0, l.output, 1);
     int m = l.batch;
     int k = l.inputs;
@@ -166,7 +166,7 @@ void forward_connected_layer(layer l, network net)
     float *b = l.weights;
     float *c = l.output;
     gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
-    
+
 
     if(l.batch_normalize){
         forward_batchnorm_layer(l, net);
@@ -197,7 +197,7 @@ void backward_connected_layer(layer l, network net)
     float *a = l.delta;
     float *b = net.input;
     float *c = l.weight_updates;
-    
+
     //differential privacy
     if(net.index < global_dp){
         gemm_diff(1,0,m,n,k,1,a,m,b,n,1,c,n);
