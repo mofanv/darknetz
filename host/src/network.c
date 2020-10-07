@@ -37,6 +37,9 @@
 #include "parser.h"
 #include "data.h"
 
+int debug_summary_com = 0;
+int debug_summary_pass = 0;
+
 load_args get_base_args(network *net)
 {
     load_args args = {0};
@@ -204,15 +207,16 @@ int workspaceBOO(network net)
                   workspace_size = l.workspace_size;
             }
 
-            if(partition_point2 < i){
+            if(i > partition_point1 && i <= partition_point2){
                   untrusted_has_conv = 1;
             }
 
-            if(partition_point2 >= i){
+            if(i <= partition_point1 || i > partition_point2){
                   trusted_has_conv = 1;
             }
         }
    }
+
 
    if(untrusted_has_conv & trusted_has_conv)
    {
@@ -233,33 +237,65 @@ void forward_network(network *netp)
 #endif
     network net = *netp;
 
+    // have Conv across or not
+    // if(wssize == -1)  {
+        // wssize = workspaceBOO(net);
+        // if(wssize) update_net_agrv_CA_allocateSM(wssize, net.workspace);
+    // }
+    //if(wssize)  update_net_agrv_CA(0, wssize, net.workspace);
+
     int i;
     for(i = 0; i < net.n; ++i){
         net.index = i;
         layer l = net.layers[i];
 
-        if(i > partition_point2)
+        if(i > partition_point1 && i <= partition_point2)
         {
-            forward_network_CA(net.input, l.inputs, net.batch, net.train);
-            i = net.n;
+            // forward all the others in TEE
+            if(debug_summary_com == 1){
+                summary_array("forward_network / net.input", net.input, l.inputs*net.batch);
+            }
 
-        }else
+            forward_network_CA(net.input, l.inputs, net.batch, net.train);
+            //if(wssize)  workspace_CA(wssize, net.workspace);
+
+            //i = partition_point2 + 1; // jump to further forward in CA
+            i = partition_point2;
+
+            // receive parames (layer partition_point2's outputs) from TA
+            if(partition_point2 < net.n - 1)
+            {
+                layer l_pp2 = net.layers[partition_point2];
+
+                forward_network_back_CA(l_pp2.outputs, net.batch);
+                for(int z=0; z<l_pp2.outputs * net.batch; z++){
+                    l_pp2.output[z] = net_input_back[z];
+                }
+                net.input = l_pp2.output;
+                free(net_input_back);
+
+                if(debug_summary_com == 1){
+                    summary_array("forward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                }
+            }
+
+        }else // forward in REE
         {
+
             if(l.delta){
                 fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
             }
 
             l.forward(l, net);
+
+            if(debug_summary_pass == 1){
+                summary_array("forward_network / l.output", l.output, l.inputs*net.batch);
+            }
+
             net.input = l.output;
             if(l.truth) {
                 net.truth = l.output;
             }
-
-            if(wssize == -1)  {
-              wssize = workspaceBOO(net);
-              if(wssize) update_net_agrv_CA_allocateSM(wssize, net.workspace);
-            }
-            if(wssize)  update_net_agrv_CA(0, wssize, net.workspace);
         }
     }
 
@@ -294,10 +330,10 @@ void update_network(network *netp)
         layer l = net.layers[i];
         if(l.update){
 
-            if(i > partition_point2)
+            if(i > partition_point1 && i <= partition_point2)
             {
                 update_network_CA(a);
-                i = net.n;
+                i = partition_point2; // jump to further update in CA
             }else
             {
                 l.update(l, a);
@@ -306,12 +342,17 @@ void update_network(network *netp)
     }
 }
 
+
 void calc_network_cost(network *netp)
 {
     network net = *netp;
     int i;
     float sum = 0;
     int count = 0;
+    // if(partition_point2 < net.n-1){ // leave softmax: thus only cost layer
+    //     sum += net.layers[net.n-1].cost[0];
+    //     ++count;
+    // }else{
     for(i = 0; i < net.n; ++i){
         if(net.layers[i].cost){
             sum += net.layers[i].cost[0];
@@ -319,13 +360,19 @@ void calc_network_cost(network *netp)
             ++count;
         }
     }
+    // }
+
     *net.cost = sum/count;
 }
+
+
 
 int get_predicted_class_network(network *net)
 {
     return max_index(net->output, net->outputs);
 }
+
+
 
 void backward_network(network *netp)
 {
@@ -339,9 +386,7 @@ void backward_network(network *netp)
     int i;
     network orig = net;
 
-    int size_prev = net.layers[partition_point2].outputs * net.batch;
-    float *ca_prevlayer_input = malloc(sizeof(float) * size_prev);
-    float *ca_prevlayer_delta = malloc(sizeof(float) * size_prev);
+    layer l_pp2 = net.layers[partition_point2];
 
     for(i = net.n-1; i >= 0; --i){
         layer l = net.layers[i];
@@ -350,48 +395,86 @@ void backward_network(network *netp)
         if(i == 0){
             net = orig;
 
-        }else if(i == net.n-1){
-            layer prev = net.layers[partition_point2];
-            for(int z=0; z<size_prev; z++){
-                ca_prevlayer_input[z] = prev.output[z];
-                ca_prevlayer_delta[z] = prev.delta[z];
-            }
+        }else{
+            layer prev = net.layers[i-1];
+            // pointer net.input and delta to previous layer's ..
             net.input = prev.output;
             net.delta = prev.delta;
 
-        }else{
-            layer prev = net.layers[i-1];
-            net.input = prev.output;
-            net.delta = prev.delta;
+            if(i == partition_point2+1){
+                // pass outputs of last layer (latter part) from TEE to REE
+                backward_network_back_CA_addidion(l_pp2.outputs, net.batch);
+
+                for(int z=0; z<l_pp2.outputs * net.batch; z++){
+                    l_pp2.output[z] = net_input_back[z];
+                    //l_pp2.delta[z] = net_delta_back[z];
+                    l_pp2.delta[z] = 0.0f;
+                }
+                free(net_input_back);
+                //free(net_delta_back);
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_back_addidion / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                    //summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
+                }
+            }
         }
 
         net.index = i;
 
-        if(i > partition_point2)
+        // backward in the TEE
+        if(i > partition_point1 && i <= partition_point2)
         {
+            // NOT all layers are in TEE
+            if (partition_point1+1 > 0){
+                layer l_pp1 = net.layers[partition_point1];
 
-            backward_network_CA(ca_prevlayer_input, net.layers[partition_point2].outputs, net.batch, ca_prevlayer_delta, net.train);
+                if(debug_summary_com == 1){
+                    summary_array("backward_network / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                    summary_array("backward_network / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+                }
 
-            backward_network_CA_addidion(net.layers[partition_point2].outputs, net.batch);
+                backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
 
-            for(int z=0; z<size_prev; z++){
-                net.input[z] = net_input_back[z];
-                net.delta[z] = net_delta_back[z];
+                backward_network_CA_addidion(l_pp1.outputs, net.batch);
+
+                for(int z=0; z<l_pp1.outputs * net.batch; z++){
+                    l_pp1.output[z] = net_input_back[z];
+                    l_pp1.delta[z] = net_delta_back[z];
+                }
+                free(net_input_back);
+                free(net_delta_back);
+
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
+                    summary_array("backward_network_addidion / l_pp1.delta", l_pp1.delta, l_pp1.outputs * net.batch);
+                }
+
+            }else{
+                backward_network_CA(net.input, net.layers[0].inputs, net.batch, net.train);
             }
-            free(net_input_back);
-            free(net_delta_back);
 
-            if(wssize)  update_net_agrv_CA(1, wssize, net.workspace);
+            i = partition_point1 + 1;
 
-            i = partition_point2 + 1;
-        }else
+        }else // in the REE
         {
             l.backward(l, net);
+
+            // pass pp2 outputs and delta back to TEE
+            if(i == partition_point2+1)
+            {
+                if(debug_summary_com == 1){
+                    summary_array("backward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
+                    summary_array("backward_network_back / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
+                }
+                backward_network_back_CA(l_pp2.output, l_pp2.outputs, net.batch, l_pp2.delta);
+            }
         }
     }
-    free(ca_prevlayer_input);
-    free(ca_prevlayer_delta);
+    //free(ca_prev_last_layer_input);
+    //free(ca_prev_last_layer_delta);
 }
+
+
 
 float train_network_datum(network *net)
 {
@@ -434,7 +517,10 @@ float train_network(network *net, data d)
         get_next_batch(d, batch, i*batch, net->input, net->truth);
 
         // transmit net truth into TA
-        net_truth_CA(net->truth, net->truths, net->batch);
+        if(partition_point2 >= net->n-1){
+            net_truth_CA(net->truth, net->truths, net->batch);
+        }
+
 
         float err = train_network_datum(net);
         sum += err;
@@ -621,19 +707,34 @@ float *network_predict(network *net, float *input)
     forward_network(net);
 
     float *out;
-    // this partition_point2 = (-pp) - 1
-    if(net->layers[partition_point2].type == SOFTMAX){
-        // only the softmax is the last layer in NW
+    // this partition_point = (-pp) - 1
+    // all layers are outside of TEE
+    if(partition_point1 >= net->n-1){
         out = net->output;
-    }else{
-        //call TA to return output
-        net_output_return_CA(net->outputs, 1);
-        out = net_output_back;
-    }
 
-    *net = orig;
-    return out;
+     // at least several layers are inside of TEE
+    }else if(partition_point1 < net->n-1){
+         // begin at softmax
+         if(net->layers[partition_point1].type == SOFTMAX){
+             // only the softmax is the last layer in NW
+             out = net->output;
+
+         // end outside of TEE
+         }else if(partition_point2 < net->n-1){
+             out = net->output;
+
+         // end inside of TEE
+         }else{
+             //call TA to return output
+             net_output_return_CA(net->outputs, 1);
+             out = net_output_back;
+         }
+     }
+
+     *net = orig;
+     return out;
 }
+
 
 int num_detections(network *net, float thresh)
 {

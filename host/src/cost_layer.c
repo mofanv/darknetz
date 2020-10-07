@@ -42,7 +42,7 @@ char *get_cost_string(COST_TYPE a)
 
 cost_layer make_cost_layer(int batch, int inputs, COST_TYPE cost_type, float scale)
 {
-    if(count_global <= partition_point2){
+    if(count_global <= partition_point1 || count_global > partition_point2){
         fprintf(stderr, "cost                                           %4d\n",  inputs);
     }else{
         fprintf(stderr, "cost_TA                                        %4d\n",  inputs);

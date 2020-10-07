@@ -41,8 +41,8 @@
 
 
 int count_global = 0;
-int partition_point1 = 0; //4,5// number 5 is the dropout layer
-int partition_point2 = 0; //4,5// number 5 is the dropout layer
+int partition_point1 = 0;
+int partition_point2 = 0;
 int global_dp = 0;
 
 typedef struct{
@@ -94,6 +94,7 @@ LAYER_TYPE string_to_layer_type(char * type)
     return BLANK;
 }
 
+
 void free_section(section *s)
 {
     free(s->type);
@@ -109,6 +110,7 @@ void free_section(section *s)
     free(s->options);
     free(s);
 }
+
 
 void parse_data(char *data, float *a, int n)
 {
@@ -212,11 +214,8 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     layer.flipped = option_find_int_quiet(options, "flipped", 0);
     layer.dot = option_find_float_quiet(options, "dot", 0);
 
-    if(count_global < partition_point1){
-    make_convolutional_layer_CA(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor, params.net->adam, layer.flipped, layer.dot);
-    }
 
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
     make_convolutional_layer_CA(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor, params.net->adam, layer.flipped, layer.dot);
     }
 
@@ -283,10 +282,7 @@ layer parse_connected(list *options, size_params params)
     layer l = make_connected_layer(params.batch, params.inputs, output, activation, batch_normalize, params.net->adam);
 
     // send parameters into TA
-    if(count_global < partition_point1){
-        make_connected_layer_CA(params.batch, params.inputs, output, activation, batch_normalize, params.net->adam);
-    }
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
         make_connected_layer_CA(params.batch, params.inputs, output, activation, batch_normalize, params.net->adam);
     }
     return l;
@@ -305,10 +301,7 @@ layer parse_softmax(list *options, size_params params)
     l.spatial = option_find_float_quiet(options, "spatial", 0);
     l.noloss =  option_find_int_quiet(options, "noloss", 0);
 
-    if(count_global < partition_point1){
-        make_softmax_layer_CA(params.batch, params.inputs, groups, l.temperature, l.w, l.h, l.c, l.spatial, l.noloss);
-    }
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
         make_softmax_layer_CA(params.batch, params.inputs, groups, l.temperature, l.w, l.h, l.c, l.spatial, l.noloss);
     }
 
@@ -469,10 +462,7 @@ cost_layer parse_cost(list *options, size_params params)
     layer.noobject_scale =  option_find_float_quiet(options, "noobj", 1);
     layer.thresh =  option_find_float_quiet(options, "thresh",0);
 
-    if(count_global < partition_point1){
-        make_cost_layer_CA(params.batch, params.inputs, type, scale, layer.ratio, layer.noobject_scale, layer.thresh);
-    }
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
         make_cost_layer_CA(params.batch, params.inputs, type, scale, layer.ratio, layer.noobject_scale, layer.thresh);
     }
 
@@ -536,10 +526,7 @@ maxpool_layer parse_maxpool(list *options, size_params params)
 
     maxpool_layer layer = make_maxpool_layer(batch,h,w,c,size,stride,padding);
 
-    if(count_global < partition_point1){
-        make_maxpool_layer_CA(batch,h,w,c,size,stride,padding);
-    }
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
         make_maxpool_layer_CA(batch,h,w,c,size,stride,padding);
     }
 
@@ -570,10 +557,7 @@ dropout_layer parse_dropout(list *options, size_params params, float *net_prev_o
     layer.output = net_prev_output;
     layer.delta = net_prev_delta;
 
-    if(count_global < partition_point1){
-        make_dropout_layer_CA(params.batch, params.inputs, probability, params.w, params.h, params.c, net_prev_output, net_prev_delta);
-    }
-    if(count_global > partition_point2){
+    if(count_global > partition_point1 && count_global <= partition_point2){
         make_dropout_layer_CA(params.batch, params.inputs, probability, params.w, params.h, params.c, net_prev_output, net_prev_delta);
     }
 
@@ -795,7 +779,8 @@ void parse_net_options(list *options, network *net)
     }
     net->max_batches = option_find_int(options, "max_batches", 0);
 
-    make_network_CA(net->n - partition_point2 - 1, net->learning_rate, net->momentum, net->decay, net->time_steps, net->notruth, net->batch, net->subdivisions, net->random, net->adam, net->B1, net->B2, net->eps, net->h, net->w, net->c, net->inputs, net->max_crop, net->min_crop, net->max_ratio, net->min_ratio, net->center, net->clip, net->angle, net->aspect, net->saturation, net->exposure, net->hue, net->burn_in, net->power, net->max_batches);
+    // net->n - partition_point1 - 1
+    make_network_CA(partition_point2 - partition_point1, net->learning_rate, net->momentum, net->decay, net->time_steps, net->notruth, net->batch, net->subdivisions, net->random, net->adam, net->B1, net->B2, net->eps, net->h, net->w, net->c, net->inputs, net->max_crop, net->min_crop, net->max_ratio, net->min_ratio, net->center, net->clip, net->angle, net->aspect, net->saturation, net->exposure, net->hue, net->burn_in, net->power, net->max_batches);
 }
 
 int is_network(section *s)
@@ -921,6 +906,8 @@ network *parse_network_cfg(char *filename)
         if (l.workspace_size > workspace_size) workspace_size = l.workspace_size;
         free_section(s);
         n = n->next;
+
+        // index of parsing current layer
         ++count;
         count_global = count;
 
@@ -946,7 +933,7 @@ network *parse_network_cfg(char *filename)
     net->truth_gpu = cuda_make_array(net->truth, net->truths*net->batch);
 #endif
     if(workspace_size){
-        //printf("workspace_size=%ld\n", workspace_size);
+        printf("workspace_size=%ld\n", workspace_size);
 #ifdef GPU
         if(gpu_index >= 0){
             net->workspace = cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);
@@ -1134,8 +1121,8 @@ void save_weights_upto(network *net, char *filename, int cutoff)
         layer l = net->layers[i];
         if (l.dontsave) continue;
 
-        if(i > partition_point2){
-            int layerTA_i = i - partition_point2 - 1;
+        if(i > partition_point1 && i <= partition_point2){
+            int layerTA_i = i - partition_point1 - 1;
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
                 save_convolutional_weights_comm(l, layerTA_i);
             } if(l.type == CONNECTED){
@@ -1167,6 +1154,7 @@ void save_weights_upto(network *net, char *filename, int cutoff)
                 save_convolutional_weights_comm(*(l.self_layer), layerTA_i);
                 save_convolutional_weights_comm(*(l.output_layer), layerTA_i);
             }
+
         }
 
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
@@ -1444,7 +1432,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     for(i = start; i < net->n && i < cutoff; ++i){
 
         // load weights of the NW side
-        if(i <= partition_point2){
+        if(i <= partition_point1 || i > partition_point2){
             layer l = net->layers[i];
             if (l.dontload) continue;
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
@@ -1506,7 +1494,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
         }
         else{
             layer l = net->layers[i];
-            int layerTA_i = i - partition_point2 - 1;
+            int layerTA_i = i - partition_point1 - 1;
 
             if (l.dontload) continue;
             if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){

@@ -5,6 +5,8 @@
 #include "network_TA.h"
 
 extern float *netta_truth;
+extern int debug_summary_com;
+extern int debug_summary_pass;
 
 /*
  * This UUID is generated with uuidgen
@@ -33,5 +35,10 @@ extern float *netta_truth;
 #define OUTPUT_RETURN_CMD 16
 #define SAVE_WEI_CMD 17
 
+#define FORWARD_BACK_CMD 18
+#define BACKWARD_BACK_CMD 19
+#define BACKWARD_BACK_ADD_CMD 20
+
+void summary_array(char *print_name, float *arr, int n);
 
 #endif /*TA_DARKNETP_H*/

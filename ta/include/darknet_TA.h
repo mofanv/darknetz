@@ -365,6 +365,8 @@ typedef struct network_TA{
     float *cost;
     float clip;
 
+    size_t workspace_size;
+
 } network_TA;
 
 #endif

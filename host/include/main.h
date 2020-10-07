@@ -27,6 +27,10 @@
 #define OUTPUT_RETURN_CMD 16
 #define SAVE_WEI_CMD 17
 
+#define FORWARD_BACK_CMD 18
+#define BACKWARD_BACK_CMD 19
+#define BACKWARD_BACK_ADD_CMD 20
+
 #define TA_DARKNETP_UUID \
 	{ 0x7fc5c039, 0x0542, 0x4ee1, \
 		{ 0x80, 0xaf, 0xb4, 0xea, 0xb2, 0xf1, 0x99, 0x8d} }
@@ -61,9 +65,15 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
 
 void forward_network_CA(float *net_input, int net_inputs, int net_batch, int net_train);
 
+void forward_network_back_CA(int net_inputs, int net_batch);
+
 void backward_network_CA_addidion(int net_inputs, int net_batch);
 
-void backward_network_CA(float *net_input, int l_inputs, int batch, float *net_delta, int net_train);
+void backward_network_CA(float *net_input, int l_inputs, int batch, int net_train);
+
+void backward_network_back_CA_addidion(int net_inputs, int net_batch);
+
+void backward_network_back_CA(float *net_input, int l_inputs, int net_batch, float *net_delta);
 
 void update_network_CA(update_args a);
 
@@ -71,10 +81,14 @@ void net_truth_CA(float *net_truth, int net_truths, int net_batch);
 
 void calc_network_loss_CA(int n, int batch);
 
+void net_output_return_CA(int net_outputs, int net_batch);
+
 void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional);
 
 void save_weights_CA(float *vec, int length, int layer_i, char type);
 
 void backward_network_CA_addidion(int net_inputs, int net_batch);
+
+void summary_array(char *print_name, float *arr, int n);
 
 #endif

@@ -14,7 +14,7 @@ void calc_network_loss_TA(int n, int batch);
 
 void forward_network_TA();
 
-void backward_network_TA(float *ca_net_input, float *ca_net_delta);
+void backward_network_TA(float *ca_net_input);
 
 void update_network_TA(update_args_TA a);
 #endif

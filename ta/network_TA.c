@@ -59,12 +59,24 @@ void make_network_TA(int n, float learning_rate, float momentum, float decay, in
     netta.burn_in = burn_in;
     netta.power = power;
     netta.max_batches = max_batches;
+    netta.workspace_size = 0;
 
     //netta.truth = net->truth; ////// ing network.c train_network
 }
 
 void forward_network_TA()
 {
+    if(roundnum == 0){
+        // ta_net_input malloc so not destroy before addition backward
+        ta_net_input = malloc(sizeof(float) * netta.layers[0].inputs * netta.layers[0].batch);
+        ta_net_delta = malloc(sizeof(float) * netta.layers[0].inputs * netta.layers[0].batch);
+
+        if(netta.workspace_size){
+            printf("workspace_size=%ld\n", netta.workspace_size);
+            netta.workspace = calloc(1, netta.workspace_size);
+        }
+    }
+
     roundnum++;
     int i;
     for(i = 0; i < netta.n; ++i){
@@ -77,20 +89,31 @@ void forward_network_TA()
 
         l.forward_TA(l, netta);
 
-         netta.input = l.output;
+        if(debug_summary_pass == 1){
+            summary_array("forward_network / l.output", l.output, l.outputs*netta.batch);
+        }
+
+        netta.input = l.output;
 
         if(l.truth) {
             netta.truth = l.output;
         }
         //output of the network (for predict)
+        // &&
         if(l.type == SOFTMAX_TA){
             ta_net_output = malloc(sizeof(float)*l.outputs*1);
             for(int z=0; z<l.outputs*1; z++){
                 ta_net_output[z] = l.output[z];
             }
-
         }
 
+        // if(i == netta.n - 1)  // ready to back REE for the rest forward pass
+        // {
+        //     ta_net_input = malloc(sizeof(float)*l.outputs*l.batch);
+        //     for(int z=0; z<l.outputs*l.batch; z++){
+        //         ta_net_input[z] = netta.input[z];
+        //     }
+        // }
     }
 
     calc_network_cost_TA();
@@ -142,7 +165,8 @@ void calc_network_loss_TA(int n, int batch)
 
 
 
-void backward_network_TA(float *ca_net_input, float *ca_net_delta)
+//void backward_network_TA(float *ca_net_input, float *ca_net_delta)
+void backward_network_TA(float *ca_net_input)
 {
     int i;
 
@@ -151,13 +175,11 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
 
         if(l.stopbackward) break;
         if(i == 0){
-            // ta_net_input malloc so not destroy before addition backward
-            ta_net_input = malloc(sizeof(float)*l.inputs*l.batch);
-            ta_net_delta = malloc(sizeof(float)*l.inputs*l.batch);
-
             for(int z=0; z<l.inputs*l.batch; z++){
+             // note: both ca_net_input and ca_net_delta are pointer
                 ta_net_input[z] = ca_net_input[z];
-                ta_net_delta[z] = ca_net_delta[z];
+                //ta_net_delta[z] = ca_net_delta[z]; zeros removing
+                ta_net_delta[z] = 0.0f;
             }
 
             netta.input = ta_net_input;
@@ -171,6 +193,7 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
         netta.index = i;
         l.backward_TA(l, netta);
 
+        // when the first layer in TEE is a Dropout layer
         if((l.type == DROPOUT_TA) && (i == 0)){
             for(int z=0; z<l.inputs*l.batch; z++){
                 ta_net_input[z] = l.output[z];
@@ -180,5 +203,4 @@ void backward_network_TA(float *ca_net_input, float *ca_net_delta)
             //netta.delta = l.delta;
         }
     }
-    //backward_network_back_TA_params(netta.input, netta.delta, netta.layers[0].inputs, netta.batch);
 }

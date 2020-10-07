@@ -68,9 +68,6 @@ int convolutional_out_width_TA(convolutional_layer_TA l)
     return (l.w + 2*l.pad - l.size) / l.stride + 1;
 }
 
-static size_t get_workspace_size_TA(layer_TA l){
-    return (size_t)l.out_h*l.out_w*l.size*l.size*l.c/l.groups*sizeof(float);
-}
 
 void binarize_weights_TA(float *weights, int n, int size, float *binary)
 {
@@ -94,6 +91,12 @@ void binarize_cpu_TA(float *input, int n, float *binary)
         binary[i] = (input[i] > 0) ? 1 : -1;
     }
 }
+
+
+static size_t get_workspace_size(layer_TA l){
+    return (size_t)l.out_h*l.out_w*l.size*l.size*l.c/l.groups*sizeof(float);
+}
+
 
 convolutional_layer_TA make_convolutional_layer_TA_new(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION_TA activation, int batch_normalize, int binary, int xnor, int adam, int flipped, float dot)
 {
@@ -183,7 +186,7 @@ convolutional_layer_TA make_convolutional_layer_TA_new(int batch, int h, int w, 
         l.scale_v = calloc(n, sizeof(float));
     }
 
-    l.workspace_size = get_workspace_size_TA(l);
+    l.workspace_size = get_workspace_size(l);
     l.activation = activation;
 
     l.flipped = flipped;
