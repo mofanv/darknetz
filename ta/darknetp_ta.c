@@ -24,6 +24,7 @@ float *netta_truth;
 int netnum = 0;
 int debug_summary_com = 0;
 int debug_summary_pass = 0;
+int norm_output = 1;
 
 
 void summary_array(char *print_name, float *arr, int n)
@@ -95,7 +96,7 @@ TEE_Result TA_OpenSessionEntryPoint(uint32_t param_types,
     (void)&params;
     (void)&sess_ctx;
 
-    IMSG("I'm Vincent, from secure world!\n");
+    IMSG("secure world opened!\n");
     return TEE_SUCCESS;
 }
 
@@ -816,20 +817,20 @@ static TEE_Result net_output_return_TA_params(uint32_t param_types,
     float *params0 = params[0].memref.buffer;
     int buffersize = params[0].memref.size / sizeof(float);
 
-    // remove confidence scores
-    float rm_conf[buffersize];
-    float maxconf; maxconf = 0.00001f;
-    int maxidx; maxidx = 0;
+    if(norm_output){
+        // remove confidence scores
+        float maxconf; maxconf = 0.00001f;
+        int maxidx; maxidx = 0;
 
-    // for(int z=0; z<buffersize; z++){
-    //     rm_conf[z] = ta_net_output[z];
-    //     if(rm_conf[z] > maxconf){
-    //         maxconf = rm_conf[z];
-    //         maxidx = z;
-    //     }
-    //     rm_conf[z] = 0.0f;
-    // }
-    // rm_conf[maxidx] = 0.99f;
+        for(int z=0; z<buffersize; z++){
+            if(ta_net_output[z] > maxconf){
+                maxconf = ta_net_output[z];
+                maxidx = z;
+            }
+            ta_net_output[z] = 0.0f;
+        }
+        ta_net_output[maxidx] = 1.00f;
+    }
 
     for(int z=0; z<buffersize; z++){
         params0[z] = ta_net_output[z];

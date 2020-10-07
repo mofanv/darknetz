@@ -703,19 +703,31 @@ float *network_predict(network *net, float *input)
 
     float *out;
     // this partition_point = (-pp) - 1
-    if(net->layers[partition_point1].type == SOFTMAX){
-        // only the softmax is the last layer in NW
+    // all layers are outside of TEE
+    if(partition_point1 >= net->n-1){
         out = net->output;
-    }else if(partition_point2 < net->n-1){
-        out = net->output;
-    }else{
-        //call TA to return output
-        net_output_return_CA(net->outputs, 1);
-        out = net_output_back;
-    }
 
-    *net = orig;
-    return out;
+     // at least several layers are inside of TEE
+    }else if(partition_point1 < net->n-1){
+         // begin at softmax
+         if(net->layers[partition_point1].type == SOFTMAX){
+             // only the softmax is the last layer in NW
+             out = net->output;
+
+         // end outside of TEE
+         }else if(partition_point2 < net->n-1){
+             out = net->output;
+
+         // end inside of TEE
+         }else{
+             //call TA to return output
+             net_output_return_CA(net->outputs, 1);
+             out = net_output_back;
+         }
+     }
+
+     *net = orig;
+     return out;
 }
 
 int num_detections(network *net, float thresh)
