@@ -64,7 +64,7 @@ void load_weights_TA(float *vec, int length, int layer_i, char type, int transpo
     // decrypt
     float *tempvec = malloc(length*sizeof(float));
     copy_cpu_TA(length, vec, 1, tempvec, 1);
-    aes_cbc_TA("decrypt", tempvec, length);
+    //aes_cbc_TA("decrypt", tempvec, length);
 
     // copy
     layer_TA l = netta.layers[layer_i];
@@ -121,5 +121,5 @@ void save_weights_TA(float *weights_encrypted, int length, int layer_i, char typ
     }
 
     // remove the on-device encryption for FL
-    aes_cbc_TA("encrypt", weights_encrypted, length);
+    //aes_cbc_TA("encrypt", weights_encrypted, length);
 }
