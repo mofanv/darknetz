@@ -17,7 +17,7 @@ You can run this application with real TrustZone or a simulated one by using QEM
 
 **For simulation**, no additional hardware is needed.
 
-**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/en/latest/building/devices/index.html#device-specific) for more info.
+**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, etc. Check this [List](https://optee.readthedocs.io/en/latest/building/devices/index.html#device-specific) for more info.
 
 # Setup
 ## (1) Set up OP-TEE
@@ -38,15 +38,15 @@ tee-supplicant -d
 xtest
 ```
 
-## (2) Build Darknetp
+## (2) Build DarkneTZ
 1) clone codes and datasets
 ```
-git clone https://github.com/mofanv/darknetp.git
+git clone https://github.com/mofanv/darknetz.git
 git clone https://github.com/mofanv/tz_datasets.git
 ```
 Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
 
-2) copy Darknetp to example dir
+2) copy DarkneTZ to example dir
 ```
 mkdir $PATH_OPTEE$/optee_examples/darknetp
 cp -a $PATH_darknetp$/. $PATH_OPTEE$/optee_examples/darknetp/
@@ -61,7 +61,7 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For simulation**, to run `make run` again.
 
-**For real boards**, to run `make all` again, and flash the OP-TEE to your device.
+**For real boards**, to run `make flash` to flash the OP-TEE with `` to your device.
 
 5) after boot your devices or QEMU, to test by the command
 ```
