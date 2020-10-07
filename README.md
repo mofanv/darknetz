@@ -65,7 +65,7 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For real boards**, to run `make flash` to flash the OP-TEE with `darknetz` to your device.
 
-5) after boot your devices or QEMU, to test by the command 
+5) after you boot your devices or QEMU, test by the command 
 ```
 darknetp
 ```
@@ -85,7 +85,7 @@ darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lene
 ```
 You can choose the partition point of layers in the TEE by adjusting the argument `-pp_start` and `-pp_end`. Any sequence layers (first, middle, or last layers) can be put inside the TEE.
 
-Note: you may suffer from insufficient secure memory problems when you run this command. the preconfigured secure memory of darknetz is `TA_STACK_SIZE = 1*1024*1024` and `TA_DATA_SIZE = 10*1024*1024` in `ta/user_ta_header_defines.h` file. However, the maximum secure memory size can differ from different devices (typical size is 16 MiB) and maybe not enough. When this happens, you may want to either, configure the needed secure memory to be smaller, or increase the secure memory of the device (for QEMU go to the [link here](https://github.com/OP-TEE/optee_os/issues/2079)).
+Note: you may suffer from insufficient secure memory problems when you run this command. The preconfigured secure memory of darknetz is `TA_STACK_SIZE = 1*1024*1024` and `TA_DATA_SIZE = 10*1024*1024` in `ta/user_ta_header_defines.h` file. However, the maximum secure memory size can differ from different devices (typical size is 16 MiB) and maybe not enough. When this happens, you may want to either, configure the needed secure memory to be smaller, or increase the secure memory of the device (for QEMU go to the [link here](https://github.com/OP-TEE/optee_os/issues/2079)).
 
 When everything is ready, you will see output from the Normal World like this:
 ```
