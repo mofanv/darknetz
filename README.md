@@ -149,6 +149,7 @@ When the layer is inside the TEE, we want to hide the output in some ways as wel
  0.00%: 0
  0.00%: 4
 ```
+This can be changed to other normalization ways (Top 5 or ranks only) and can be easily implemented as well. We leave it here.
 
 More functions to be added ;)
 
