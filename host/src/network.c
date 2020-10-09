@@ -498,7 +498,7 @@ float train_network(network *net, data d)
         get_next_batch(d, batch, i*batch, net->input, net->truth);
 
         // transmit net truth into TA
-        if(partition_point2 >= net->n-1){
+        if(partition_point1 < net->n-1 && partition_point2 >= net->n-1){
             net_truth_CA(net->truth, net->truths, net->batch);
         }
 
