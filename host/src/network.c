@@ -267,12 +267,9 @@ void forward_network(network *netp)
             {
                 layer l_pp2 = net.layers[partition_point2];
 
-                forward_network_back_CA(l_pp2.outputs, net.batch);
-                for(int z=0; z<l_pp2.outputs * net.batch; z++){
-                    l_pp2.output[z] = net_input_back[z];
-                }
+                forward_network_back_CA(l_pp2.output, l_pp2.outputs, net.batch);
+
                 net.input = l_pp2.output;
-                free(net_input_back);
 
                 if(debug_summary_com == 1){
                     summary_array("forward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
@@ -403,15 +400,8 @@ void backward_network(network *netp)
 
             if(i == partition_point2+1){
                 // pass outputs of last layer (latter part) from TEE to REE
-                backward_network_back_CA_addidion(l_pp2.outputs, net.batch);
+                backward_network_back_CA_addidion(l_pp2.output, l_pp2.delta, l_pp2.outputs, net.batch);
 
-                for(int z=0; z<l_pp2.outputs * net.batch; z++){
-                    l_pp2.output[z] = net_input_back[z];
-                    //l_pp2.delta[z] = net_delta_back[z];
-                    l_pp2.delta[z] = 0.0f;
-                }
-                free(net_input_back);
-                //free(net_delta_back);
                 if(debug_summary_com == 1){
                     summary_array("backward_network_back_addidion / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
                     //summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
@@ -435,14 +425,7 @@ void backward_network(network *netp)
 
                 backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
 
-                backward_network_CA_addidion(l_pp1.outputs, net.batch);
-
-                for(int z=0; z<l_pp1.outputs * net.batch; z++){
-                    l_pp1.output[z] = net_input_back[z];
-                    l_pp1.delta[z] = net_delta_back[z];
-                }
-                free(net_input_back);
-                free(net_delta_back);
+                backward_network_CA_addidion(l_pp1.output, l_pp1.delta, l_pp1.outputs, net.batch);
 
                 if(debug_summary_com == 1){
                     summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
@@ -470,8 +453,6 @@ void backward_network(network *netp)
             }
         }
     }
-    //free(ca_prev_last_layer_input);
-    //free(ca_prev_last_layer_delta);
 }
 
 

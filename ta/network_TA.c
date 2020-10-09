@@ -100,7 +100,7 @@ void forward_network_TA()
         }
         //output of the network (for predict)
         // &&
-        if(l.type == SOFTMAX_TA){
+        if(!netta.train && l.type == SOFTMAX_TA){
             ta_net_output = malloc(sizeof(float)*l.outputs*1);
             for(int z=0; z<l.outputs*1; z++){
                 ta_net_output[z] = l.output[z];

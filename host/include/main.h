@@ -65,13 +65,13 @@ void make_cost_layer_CA(int batch, int inputs, COST_TYPE cost_type, float scale,
 
 void forward_network_CA(float *net_input, int net_inputs, int net_batch, int net_train);
 
-void forward_network_back_CA(int net_inputs, int net_batch);
+void forward_network_back_CA(float *l_output, int net_inputs, int net_batch);
 
-void backward_network_CA_addidion(int net_inputs, int net_batch);
+void backward_network_CA_addidion(float *l_output, float *l_delta, int net_inputs, int net_batch);
 
 void backward_network_CA(float *net_input, int l_inputs, int batch, int net_train);
 
-void backward_network_back_CA_addidion(int net_inputs, int net_batch);
+void backward_network_back_CA_addidion(float *l_output, float *l_delta, int net_inputs, int net_batch);
 
 void backward_network_back_CA(float *net_input, int l_inputs, int net_batch, float *net_delta);
 
@@ -86,8 +86,6 @@ void net_output_return_CA(int net_outputs, int net_batch);
 void transfer_weights_CA(float *vec, int length, int layer_i, char type, int additional);
 
 void save_weights_CA(float *vec, int length, int layer_i, char type);
-
-void backward_network_CA_addidion(int net_inputs, int net_batch);
 
 void summary_array(char *print_name, float *arr, int n);
 

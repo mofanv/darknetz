@@ -278,17 +278,17 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
 
 
                 free_data(train);
-                if(*net->seen/N > epoch) {
-                        epoch = *net->seen/N;
-                        char buff[256];
-                        sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
-                        save_weights(net, buff);
-                }
-                if(get_current_batch(net)%1000 == 0) {
-                        char buff[256];
-                        sprintf(buff, "%s/%s.backup",backup_directory,base);
-                        save_weights(net, buff);
-                }
+                // if(*net->seen/N > epoch) {
+                //         epoch = *net->seen/N;
+                //         char buff[256];
+                //         sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
+                //         save_weights(net, buff);
+                // }
+                // if(get_current_batch(net)%1000 == 0) {
+                //         char buff[256];
+                //         sprintf(buff, "%s/%s.backup",backup_directory,base);
+                //         save_weights(net, buff);
+                // }
         }
         fclose(output_file);
 
@@ -1316,4 +1316,3 @@ void run_classifier(int argc, char **argv)
         else if(0==strcmp(argv[2], "validcrop")) validate_classifier_crop(data, cfg, weights);
         else if(0==strcmp(argv[2], "validfull")) validate_classifier_full(data, cfg, weights);
 }
-
