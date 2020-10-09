@@ -24,7 +24,8 @@ void make_network_TA(int n, float learning_rate, float momentum, float decay, in
 {
     netta.n = n;
 
-    netta.seen = calloc(1, sizeof(size_t));
+    //netta.seen = calloc(1, sizeof(size_t));
+    netta.seen = calloc(1, sizeof(uint64_t));
     netta.layers = calloc(netta.n, sizeof(layer_TA));
     netta.t    = calloc(1, sizeof(int));
     netta.cost = calloc(1, sizeof(float));
