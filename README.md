@@ -81,7 +81,7 @@ Awesome! You are ready to run DNN layers in TrustZone.
 
 1) To train a model from scratch 
 ```
-darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg
+darknetp classifier train -pp_start 4 -pp_end 10 cfg/mnist.dataset cfg/mnist_lenet.cfg
 ```
 You can choose the partition point of layers in the TEE by adjusting the argument `-pp_start` and `-pp_end`. Any sequence layers (first, middle, or last layers) can be put inside the TEE.
 
@@ -93,17 +93,18 @@ When everything is ready, you will see output from the Normal World like this:
 # Begin darknet
 # mnist_lenet
 # 1
-# layer     filters    size              input                output
-#     0 conv      6  5 x 5 / 1    28 x  28 x   3   ->    28 x  28 x   6  0.001 BFLOPs
-#     1 max          2 x 2 / 2    28 x  28 x   6   ->    14 x  14 x   6
-#     2 conv      6  5 x 5 / 1    14 x  14 x   6   ->    14 x  14 x   6  0.000 BFLOPs
-#     3 max          2 x 2 / 2    14 x  14 x   6   ->     7 x   7 x   6
-#     4 connected_TA                          294  ->   120
-#     5 connected_TA                          120  ->    84
-#     6 dropout_TA    p = 0.80                 84  ->    84
-#     7 connected_TA                           84  ->    10
-#     8 softmax_TA                                       10
-#     9 cost_TA                                          10
+layer     filters    size              input                output
+    0 conv      6  5 x 5 / 1    28 x  28 x   3   ->    28 x  28 x   6  0.001 BFLOPs
+    1 max          2 x 2 / 2    28 x  28 x   6   ->    14 x  14 x   6
+    2 conv      6  5 x 5 / 1    14 x  14 x   6   ->    14 x  14 x   6  0.000 BFLOPs
+    3 max          2 x 2 / 2    14 x  14 x   6   ->     7 x   7 x   6
+    4 connected_TA                          294  ->   120
+    5 dropout_TA    p = 0.80                120  ->   120
+    6 connected_TA                          120  ->    84
+    7 dropout_TA    p = 0.80                 84  ->    84
+    8 connected_TA                           84  ->    10
+    9 softmax_TA                                       10
+   10 cost_TA                                          10
 # Learning Rate: 0.01, Momentum: 0.9, Decay: 5e-05
 # 1000
 # 28 28
@@ -138,7 +139,7 @@ darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lene
 
 By simply typing the following command, you can do inference using a pre-trained model.
 ```
-darknetp classifier predict -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
+darknetp classifier predict -pp_start 4 -pp_end 10 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
 ```
 When the layer is inside the TEE, we want to hide the output in some ways as well (for defending against potential attacks (e.g. membership inference)). Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
 
