@@ -43,6 +43,7 @@
 int count_global = 0;
 int partition_point1 = 0;
 int partition_point2 = 0;
+int frozen_bool = 0;
 int global_dp = 0;
 
 typedef struct{
@@ -900,6 +901,12 @@ network *parse_network_cfg(char *filename)
         l.learning_rate_scale = option_find_float_quiet(options, "learning_rate", 1);
         l.smooth = option_find_float_quiet(options, "smooth", 0);
         option_unused(options);
+
+
+        // identify first layers outside TEE and then set to freeze
+        if(partition_point1 == count && frozen_bool){
+            l.stopbackward = 1;
+        }
 
         net->layers[count] = l;
 
