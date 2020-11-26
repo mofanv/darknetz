@@ -50,6 +50,6 @@ void print_statistics(float *a, int n);
 int int_index(int *a, int val, int n);
 
 float rand_normal_ms(float mu, float sigma);
+char* concat(char *s1, char *s2);
 
 #endif
-

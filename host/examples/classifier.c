@@ -297,9 +297,9 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
         save_weights(net, buff);
         pthread_join(load_thread, 0);
         // save received net para
-        if(fl) {
-                int sf_res = tcp_transfer(buff, "send");
-        }
+        // if(fl) {
+        //         int sf_res = tcp_transfer(buff, "send");
+        // }
 
         free_network(net);
         if(labels) free_ptrs((void**)labels, classes);
@@ -1285,11 +1285,18 @@ void run_classifier(int argc, char **argv)
             pp_start = find_int_arg(argc, argv, "-pp_start_f", 999);
             frozen_bool = 1;
         }
+        if(pp_start == 999){ // when using pp_f_only for forzen first layers (all in REE)
+            pp_start = find_int_arg(argc, argv, "-pp_f_only", 999);
+            frozen_bool = 2;
+        }
+
         partition_point1 = pp_start - 1;
         int pp_end = find_int_arg(argc, argv, "-pp_end", 999);
         partition_point2 = pp_end;
         int dp = find_int_arg(argc, argv, "-dp", -1);
         global_dp = dp;
+
+        sepa_save_bool = find_int_arg(argc, argv, "-ss", 0);
 
         int cam_index = find_int_arg(argc, argv, "-c", 0);
         int top = find_int_arg(argc, argv, "-t", 0);
