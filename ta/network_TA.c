@@ -24,7 +24,8 @@ void make_network_TA(int n, float learning_rate, float momentum, float decay, in
 {
     netta.n = n;
 
-    netta.seen = calloc(1, sizeof(size_t));
+    //netta.seen = calloc(1, sizeof(size_t));
+    netta.seen = calloc(1, sizeof(uint64_t));
     netta.layers = calloc(netta.n, sizeof(layer_TA));
     netta.t    = calloc(1, sizeof(int));
     netta.cost = calloc(1, sizeof(float));
@@ -100,7 +101,7 @@ void forward_network_TA()
         }
         //output of the network (for predict)
         // &&
-        if(l.type == SOFTMAX_TA){
+        if(!netta.train && l.type == SOFTMAX_TA){
             ta_net_output = malloc(sizeof(float)*l.outputs*1);
             for(int z=0; z<l.outputs*1; z++){
                 ta_net_output[z] = l.output[z];

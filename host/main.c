@@ -544,7 +544,7 @@ void forward_network_CA(float *net_input, int l_inputs, int net_batch, int net_t
 }
 
 
-void forward_network_back_CA(int net_inputs, int net_batch)
+void forward_network_back_CA(float *l_output, int net_inputs, int net_batch)
 {
   TEEC_Operation op;
   uint32_t origin;
@@ -564,6 +564,12 @@ void forward_network_back_CA(int net_inputs, int net_batch)
 
    res = TEEC_InvokeCommand(&sess, FORWARD_BACK_CMD,
                             &op, &origin);
+
+   for(int z=0; z<net_inputs * net_batch; z++){
+       l_output[z] = net_input_back[z];
+   }
+
+   free(net_input_back);
 
    /////////  debug_plot  /////////
    if(debug_plot_bool == 1){
@@ -621,7 +627,7 @@ void backward_network_CA(float *net_input, int l_inputs, int net_batch, int net_
 }
 
 
-void backward_network_CA_addidion(int net_inputs, int net_batch)
+void backward_network_CA_addidion(float *l_output, float *l_delta, int net_inputs, int net_batch)
 {
   TEEC_Operation op;
   uint32_t origin;
@@ -634,8 +640,6 @@ void backward_network_CA_addidion(int net_inputs, int net_batch)
   op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_MEMREF_TEMP_OUTPUT,
                                    TEEC_NONE, TEEC_NONE);
 
-
-
    op.params[0].tmpref.buffer = net_input_back;
    op.params[0].tmpref.size = sizeof(float) * net_inputs*net_batch;
    op.params[1].tmpref.buffer = net_delta_back;
@@ -643,6 +647,14 @@ void backward_network_CA_addidion(int net_inputs, int net_batch)
 
    res = TEEC_InvokeCommand(&sess, BACKWARD_ADD_CMD,
                             &op, &origin);
+
+   for(int z=0; z<net_inputs * net_batch; z++){
+       l_output[z] = net_input_back[z];
+       l_delta[z] = net_delta_back[z];
+   }
+   free(net_input_back);
+   free(net_delta_back);
+
 
     /////////  debug_plot  /////////
    if(debug_plot_bool == 1){
@@ -699,7 +711,7 @@ void backward_network_back_CA(float *net_input, int l_inputs, int net_batch, flo
 
 
 
-void backward_network_back_CA_addidion(int net_inputs, int net_batch)
+void backward_network_back_CA_addidion(float *l_output, float *l_delta, int net_inputs, int net_batch)
 {
   TEEC_Operation op;
   uint32_t origin;
@@ -722,6 +734,14 @@ void backward_network_back_CA_addidion(int net_inputs, int net_batch)
 
    res = TEEC_InvokeCommand(&sess, BACKWARD_BACK_ADD_CMD,
                             &op, &origin);
+
+   for(int z=0; z<net_inputs * net_batch; z++){
+       l_output[z] = net_input_back[z];
+       //l_pp2.delta[z] = net_delta_back[z];
+       l_delta[z] = 0.0f;
+   }
+   free(net_input_back);
+   //free(net_delta_back);
 
    /////////  debug_plot  /////////
    if(debug_plot_bool == 1){

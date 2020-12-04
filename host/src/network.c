@@ -61,6 +61,8 @@ load_args get_base_args(network *net)
 network *load_network(char *cfg, char *weights, int clear)
 {
     network *net = parse_network_cfg(cfg);
+
+
     if(weights && weights[0] != 0){
         load_weights(net, weights);
     }
@@ -187,7 +189,8 @@ network *make_network(int n)
     network *net = calloc(1, sizeof(network));
     net->n = n;
     net->layers = calloc(net->n, sizeof(layer));
-    net->seen = calloc(1, sizeof(size_t));
+    //net->seen = calloc(1, sizeof(size_t));
+    net->seen = calloc(1, sizeof(uint64_t));
     net->t    = calloc(1, sizeof(int));
     net->cost = calloc(1, sizeof(float));
     return net;
@@ -267,12 +270,9 @@ void forward_network(network *netp)
             {
                 layer l_pp2 = net.layers[partition_point2];
 
-                forward_network_back_CA(l_pp2.outputs, net.batch);
-                for(int z=0; z<l_pp2.outputs * net.batch; z++){
-                    l_pp2.output[z] = net_input_back[z];
-                }
+                forward_network_back_CA(l_pp2.output, l_pp2.outputs, net.batch);
+
                 net.input = l_pp2.output;
-                free(net_input_back);
 
                 if(debug_summary_com == 1){
                     summary_array("forward_network_back / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
@@ -403,15 +403,8 @@ void backward_network(network *netp)
 
             if(i == partition_point2+1){
                 // pass outputs of last layer (latter part) from TEE to REE
-                backward_network_back_CA_addidion(l_pp2.outputs, net.batch);
+                backward_network_back_CA_addidion(l_pp2.output, l_pp2.delta, l_pp2.outputs, net.batch);
 
-                for(int z=0; z<l_pp2.outputs * net.batch; z++){
-                    l_pp2.output[z] = net_input_back[z];
-                    //l_pp2.delta[z] = net_delta_back[z];
-                    l_pp2.delta[z] = 0.0f;
-                }
-                free(net_input_back);
-                //free(net_delta_back);
                 if(debug_summary_com == 1){
                     summary_array("backward_network_back_addidion / l_pp2.output", l_pp2.output, l_pp2.outputs * net.batch);
                     //summary_array("backward_network_back_addidion / l_pp2.delta", l_pp2.delta, l_pp2.outputs * net.batch);
@@ -435,14 +428,7 @@ void backward_network(network *netp)
 
                 backward_network_CA(l_pp1.output, l_pp1.outputs, net.batch, net.train);
 
-                backward_network_CA_addidion(l_pp1.outputs, net.batch);
-
-                for(int z=0; z<l_pp1.outputs * net.batch; z++){
-                    l_pp1.output[z] = net_input_back[z];
-                    l_pp1.delta[z] = net_delta_back[z];
-                }
-                free(net_input_back);
-                free(net_delta_back);
+                backward_network_CA_addidion(l_pp1.output, l_pp1.delta, l_pp1.outputs, net.batch);
 
                 if(debug_summary_com == 1){
                     summary_array("backward_network_addidion / l_pp1.output", l_pp1.output, l_pp1.outputs * net.batch);
@@ -470,8 +456,6 @@ void backward_network(network *netp)
             }
         }
     }
-    //free(ca_prev_last_layer_input);
-    //free(ca_prev_last_layer_delta);
 }
 
 
@@ -517,7 +501,7 @@ float train_network(network *net, data d)
         get_next_batch(d, batch, i*batch, net->input, net->truth);
 
         // transmit net truth into TA
-        if(partition_point2 >= net->n-1){
+        if(partition_point1 < net->n-1 && partition_point2 >= net->n-1){
             net_truth_CA(net->truth, net->truths, net->batch);
         }
 

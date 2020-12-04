@@ -394,6 +394,10 @@ static TEE_Result make_cost_layer_TA_params(uint32_t param_types,
     netta.layers[netnum] = lta;
     netnum++;
 
+    // allocate net.truth when the cost layer inside TEE
+    netta_truth = malloc(inputs * batch * sizeof(float));
+    //free(netta_truth) needed
+
     return TEE_SUCCESS;
 }
 
@@ -776,7 +780,6 @@ static TEE_Result net_truth_TA_params(uint32_t param_types,
     int size_truth = params[0].memref.size;
     float *params0 = params[0].memref.buffer;
 
-    netta_truth = malloc(size_truth);
     for(int z=0; z<size_truth/sizeof(float); z++){
         netta_truth[z] = params0[z];
     }

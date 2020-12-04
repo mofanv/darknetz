@@ -278,17 +278,17 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
 
 
                 free_data(train);
-                if(*net->seen/N > epoch) {
-                        epoch = *net->seen/N;
-                        char buff[256];
-                        sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
-                        save_weights(net, buff);
-                }
-                if(get_current_batch(net)%1000 == 0) {
-                        char buff[256];
-                        sprintf(buff, "%s/%s.backup",backup_directory,base);
-                        save_weights(net, buff);
-                }
+                // if(*net->seen/N > epoch) {
+                //         epoch = *net->seen/N;
+                //         char buff[256];
+                //         sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
+                //         save_weights(net, buff);
+                // }
+                // if(get_current_batch(net)%1000 == 0) {
+                //         char buff[256];
+                //         sprintf(buff, "%s/%s.backup",backup_directory,base);
+                //         save_weights(net, buff);
+                // }
         }
         fclose(output_file);
 
@@ -297,9 +297,9 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile_o, int *gpu
         save_weights(net, buff);
         pthread_join(load_thread, 0);
         // save received net para
-        if(fl) {
-                int sf_res = tcp_transfer(buff, "send");
-        }
+        // if(fl) {
+        //         int sf_res = tcp_transfer(buff, "send");
+        // }
 
         free_network(net);
         if(labels) free_ptrs((void**)labels, classes);
@@ -1280,12 +1280,23 @@ void run_classifier(int argc, char **argv)
         int *gpus = read_intlist(gpu_list, &ngpus, gpu_index);
 
         // partition point of DNN
-        int pp_start = find_int_arg(argc, argv, "-pp_start", 1000);
+        int pp_start = find_int_arg(argc, argv, "-pp_start", 999);
+        if(pp_start == 999){ // when using pp_start_f for forzen first layers outside TEE
+            pp_start = find_int_arg(argc, argv, "-pp_start_f", 999);
+            frozen_bool = 1;
+        }
+        if(pp_start == 999){ // when using pp_f_only for forzen first layers (all in REE)
+            pp_start = find_int_arg(argc, argv, "-pp_f_only", 999);
+            frozen_bool = 2;
+        }
+
         partition_point1 = pp_start - 1;
-        int pp_end = find_int_arg(argc, argv, "-pp_end", 1000);
+        int pp_end = find_int_arg(argc, argv, "-pp_end", 999);
         partition_point2 = pp_end;
         int dp = find_int_arg(argc, argv, "-dp", -1);
         global_dp = dp;
+
+        sepa_save_bool = find_int_arg(argc, argv, "-ss", 0);
 
         int cam_index = find_int_arg(argc, argv, "-c", 0);
         int top = find_int_arg(argc, argv, "-t", 0);
@@ -1316,4 +1327,3 @@ void run_classifier(int argc, char **argv)
         else if(0==strcmp(argv[2], "validcrop")) validate_classifier_crop(data, cfg, weights);
         else if(0==strcmp(argv[2], "validfull")) validate_classifier_full(data, cfg, weights);
 }
-
