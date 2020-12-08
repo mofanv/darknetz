@@ -1643,7 +1643,6 @@ void load_weights_separate(network *net, char *filename0, int start, int cutoff)
     int major;
     int minor;
     int revision;
-    int transpose = (major > 1000) || (minor > 1000);
 
     fread(&major, sizeof(int), 1, fp_ree);
     fread(&minor, sizeof(int), 1, fp_ree);
@@ -1657,13 +1656,15 @@ void load_weights_separate(network *net, char *filename0, int start, int cutoff)
         *net->seen = iseen;
     }
 
+    int transpose_ree = (major > 1000) || (minor > 1000);
+
     for(int i = start; i < net->n && i < cutoff; ++i){
         layer l = net->layers[i];
         if (l.dontload) continue;
 
         // load weights of the NW side
         if(i <= partition_point1 || i > partition_point2){
-            load_weights_layer(l, fp_ree, transpose);
+            load_weights_layer(l, fp_ree, transpose_ree);
         }
     }
     fclose(fp_ree);
@@ -1686,6 +1687,8 @@ void load_weights_separate(network *net, char *filename0, int start, int cutoff)
         *net->seen = iseen;
     }
 
+    int transpose_tee = (major > 1000) || (minor > 1000);
+
     for(int i = start; i < net->n && i < cutoff; ++i){
         layer l = net->layers[i];
         if (l.dontload) continue;
@@ -1693,20 +1696,19 @@ void load_weights_separate(network *net, char *filename0, int start, int cutoff)
         // load weights of the SW side
         if(i > partition_point1 && i <= partition_point2){
             int layerTA_i = i - partition_point1 - 1;
-            comm_load_weights_layer(l, fp_tee, layerTA_i, transpose);
+            comm_load_weights_layer(l, fp_tee, layerTA_i, transpose_tee);
         }
     }
     fclose(fp_tee);
     free(filename_tee);
 
     fprintf(stderr, "Done!\n");
-
 }
 
 
 void load_weights(network *net, char *filename)
 {
-    if(sepa_save_bool == 0){
+    if(sepa_save_bool == 0 || sepa_save_bool == 2){
         load_weights_upto(net, filename, 0, net->n);
     }else{
         load_weights_separate(net, filename, 0, net->n);
