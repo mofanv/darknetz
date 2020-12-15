@@ -545,6 +545,11 @@ avgpool_layer parse_avgpool(list *options, size_params params)
     if(!(h && w && c)) error("Layer before avgpool layer must output image.");
 
     avgpool_layer layer = make_avgpool_layer(batch,w,h,c);
+
+    if(count_global > partition_point1 && count_global <= partition_point2){
+        make_avgpool_layer_CA(batch,h,w,c);
+    }
+
     return layer;
 }
 

@@ -17,7 +17,7 @@ You can run this application with real TrustZone or a simulated one by using QEM
 
 **For simulation**, no additional hardware is needed.
 
-**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, and so on. Check this [List](https://optee.readthedocs.io/en/latest/building/devices/index.html#device-specific) for more info.
+**For real TrustZone, an additional board is required**. Raspberry Pi 3, HiKey Board, ARM Juno board, etc. Check this [List](https://optee.readthedocs.io/en/latest/building/devices/index.html#device-specific) for more info.
 
 # Setup
 ## (1) Set up OP-TEE
@@ -26,7 +26,7 @@ https://optee.readthedocs.io/en/latest/building/gits/build.html#get-and-build-th
 
 2) **For real boards**: If you are using boards, keep follow **step6** ~ **step7** in the above link to flash the devices. This step is device-specific.
 
-   **For simulation**: If you have chosen QEMU-v7/v8, to run the below command to start QEMU console.
+   **For simulation**: If you have chosen QEMU-v7/v8, run the below command to start QEMU console.
 ```
 make run
 (qemu)c
@@ -38,18 +38,20 @@ tee-supplicant -d
 xtest
 ```
 
-## (2) Build Darknetp
+Note: you may face OP-TEE related problem/errors during setup, please also free feel to raise issues in [their pages](https://github.com/OP-TEE/optee_os).
+
+## (2) Build DarkneTZ
 1) clone codes and datasets
 ```
-git clone https://github.com/mofanv/darknetp.git
+git clone https://github.com/mofanv/darknetz.git
 git clone https://github.com/mofanv/tz_datasets.git
 ```
-Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetp$` be the path of darknetp, and `$PATH_tz_datasets$` be the path of tz_datasets.
+Let `$PATH_OPTEE$` be the path of OPTEE, `$PATH_darknetz$` be the path of darknetz, and `$PATH_tz_datasets$` be the path of tz_datasets.
 
-2) copy Darknetp to example dir
+2) copy DarkneTZ to example dir
 ```
-mkdir $PATH_OPTEE$/optee_examples/darknetp
-cp -a $PATH_darknetp$/. $PATH_OPTEE$/optee_examples/darknetp/
+mkdir $PATH_OPTEE$/optee_examples/darknetz
+cp -a $PATH_darknetz$/. $PATH_OPTEE$/optee_examples/darknetz/
 ```
 
 3) copy datasets to root dir
@@ -61,15 +63,17 @@ cp -a $PATH_tz_datasets$/. $PATH_OPTEE$/out-br/target/root/
 
 **For simulation**, to run `make run` again.
 
-**For real boards**, to run `make all` again, and flash the OP-TEE to your device.
+**For real boards**, to run `make flash` to flash the OP-TEE with `darknetz` to your device.
 
-5) after boot your devices or QEMU, to test by the command
+5) after you boot your devices or QEMU, test by the command 
 ```
 darknetp
 ```
+Note: It is NOT `darknetz` here for the command.
+
 You should get the output:
  ```
-# usage: ./darknet <function>
+# usage: ./darknetp <function>
  ```
 Awesome! You are ready to run DNN layers in TrustZone.
 
@@ -77,27 +81,30 @@ Awesome! You are ready to run DNN layers in TrustZone.
 
 1) To train a model from scratch 
 ```
-darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg
+darknetp classifier train -pp_start 4 -pp_end 10 cfg/mnist.dataset cfg/mnist_lenet.cfg
 ```
-You can choose the partition point of layers in the TEE by adjusting the argument `-pp`.
+You can choose the partition point of layers in the TEE by adjusting the argument `-pp_start` and `-pp_end`. Any sequence layers (first, middle, or last layers) can be put inside the TEE.
 
-You will see output from the Normal World like this:
+Note: you may suffer from insufficient secure memory problems when you run this command. The preconfigured secure memory of darknetz is `TA_STACK_SIZE = 1*1024*1024` and `TA_DATA_SIZE = 10*1024*1024` in `ta/user_ta_header_defines.h` file. However, the maximum secure memory size can differ from different devices (typical size is 16 MiB) and maybe not enough. When this happens, you may want to either, configure the needed secure memory to be smaller, or increase the secure memory of the device (for QEMU go to the [link here](https://github.com/OP-TEE/optee_os/issues/2079)).
+
+When everything is ready, you will see output from the Normal World like this:
 ```
 # Prepare session with the TA
 # Begin darknet
 # mnist_lenet
 # 1
-# layer     filters    size              input                output
-#     0 conv      6  5 x 5 / 1    28 x  28 x   3   ->    28 x  28 x   6  0.001 BFLOPs
-#     1 max          2 x 2 / 2    28 x  28 x   6   ->    14 x  14 x   6
-#     2 conv      6  5 x 5 / 1    14 x  14 x   6   ->    14 x  14 x   6  0.000 BFLOPs
-#     3 max          2 x 2 / 2    14 x  14 x   6   ->     7 x   7 x   6
-#     4 connected_TA                          294  ->   120
-#     5 connected_TA                          120  ->    84
-#     6 dropout_TA    p = 0.80                 84  ->    84
-#     7 connected_TA                           84  ->    10
-#     8 softmax_TA                                       10
-#     9 cost_TA                                          10
+layer     filters    size              input                output
+    0 conv      6  5 x 5 / 1    28 x  28 x   3   ->    28 x  28 x   6  0.001 BFLOPs
+    1 max          2 x 2 / 2    28 x  28 x   6   ->    14 x  14 x   6
+    2 conv      6  5 x 5 / 1    14 x  14 x   6   ->    14 x  14 x   6  0.000 BFLOPs
+    3 max          2 x 2 / 2    14 x  14 x   6   ->     7 x   7 x   6
+    4 connected_TA                          294  ->   120
+    5 dropout_TA    p = 0.80                120  ->   120
+    6 connected_TA                          120  ->    84
+    7 dropout_TA    p = 0.80                 84  ->    84
+    8 connected_TA                           84  ->    10
+    9 softmax_TA                                       10
+   10 cost_TA                                          10
 # Learning Rate: 0.01, Momentum: 0.9, Decay: 5e-05
 # 1000
 # 28 28
@@ -108,7 +115,7 @@ You will see output from the Normal World like this:
 ...
 ```
 
-Layers with `_TA` are running in the TrustZone. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Trusted World. The output from the Trusted World is like this:
+Layers with `_TA` are running in the TrustZone. When the last layer is inside the TEE, you will not see the loss from Normal World. The training loss is calculated based on outputs of the model which belong to the last layer in the TrustZone, so it can only be seen from the Secure World. That is, the output from the Secure World is like this:
 ```
 # I/TA:  loss = 1.62141, avg loss = 1.62540 from the TA
 # I/TA:  loss = 1.58659, avg loss = 1.61783 from the TA
@@ -121,18 +128,20 @@ Layers with `_TA` are running in the TrustZone. The training loss is calculated 
 
 You can also load a pre-trained model into both Normal World and Secure World and then fine-tune the model, by commands:
 ```
-darknetp classifier train -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights
+darknetp classifier train -pp_start 4 -pp_end 9 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights
 ```
 
-(Note: the Secure World only accepts a model that has been trained using the same `-pp` value, since layers are encrypted when they are transferred back to save and layers will be decrypted when deploying into the Trustzone)
+~~(Note: the Secure World only accepts a model that has been trained using the same `-pp` value, since layers are encrypted when they are transferred back to save and layers will be decrypted when deploying into the TrustZone)~~
+(Note: The encryption and decryption when layers go in and out the TEE have been disabled considering it is only for simulation here)
+
 
 # Inference
 
 By simply typing the following command, you can do inference using a pre-trained model.
 ```
-darknetp classifier predict -pp 4 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
+darknetp classifier predict -pp_start 4 -pp_end 10 cfg/mnist.dataset cfg/mnist_lenet.cfg models/mnist/mnist_lenet.weights  data/mnist/images/t_00007_c3.png
 ```
-For defending potential attacks (e.g. membership inference), the cost function is always in the TEE. Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
+When the layer is inside the TEE, we want to hide the output in some ways as well (for defending against potential attacks (e.g. membership inference)). Showing the confidence score of inference also leaks privacy, so if the softmax layer is in the TEE, it only transfers back the `top1` prediction. You will get results like this:
 
 ```
 100.00%: 3
@@ -141,10 +150,9 @@ For defending potential attacks (e.g. membership inference), the cost function i
  0.00%: 0
  0.00%: 4
 ```
+This can be changed to other normalization ways (Top 5 or ranks only) and can be easily implemented as well. We leave it here.
 
 More functions to be added ;)
-
-(see developer branch for more functions)
 
 # License
 ```

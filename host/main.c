@@ -282,6 +282,35 @@ void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride,
          res, origin);
 }
 
+
+void make_avgpool_layer_CA(int batch, int h, int w, int c)
+{
+  //invoke op and transfer paramters
+  TEEC_Operation op;
+  uint32_t origin;
+  TEEC_Result res;
+
+    int passint[4];
+    passint[0] = batch;
+    passint[1] = h;
+    passint[2] = w;
+    passint[3] = c;
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_NONE,
+                                     TEEC_NONE, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+
+    res = TEEC_InvokeCommand(&sess, MAKE_AVG_CMD,
+                             &op, &origin);
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(AVG) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
 void make_dropout_layer_CA(int batch, int inputs, float probability, int w, int h, int c, float *net_prev_output, float *net_prev_delta)
 {
   //invoke op and transfer paramters
