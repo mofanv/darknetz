@@ -1297,6 +1297,9 @@ void run_classifier(int argc, char **argv)
         global_dp = dp;
 
         sepa_save_bool = find_int_arg(argc, argv, "-ss", 0);
+        // 0 no separate save and load
+        // 1 separate save and load
+        // 2 separate save but load together
 
         int cam_index = find_int_arg(argc, argv, "-c", 0);
         int top = find_int_arg(argc, argv, "-t", 0);
