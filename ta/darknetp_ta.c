@@ -5,6 +5,7 @@
 
 #include "convolutional_layer_TA.h"
 #include "maxpool_layer_TA.h"
+#include "avgpool_layer_TA.h"
 #include "dropout_layer_TA.h"
 
 #include "connected_layer_TA.h"
@@ -244,6 +245,33 @@ static TEE_Result make_maxpool_layer_TA_params(uint32_t param_types,
     int padding = params0[6];
 
     layer_TA lta = make_maxpool_layer_TA(batch, h, w, c, size, stride, padding);
+    netta.layers[netnum] = lta;
+    netnum++;
+
+    return TEE_SUCCESS;
+}
+
+
+static TEE_Result make_avgpool_layer_TA_params(uint32_t param_types,
+                                       TEE_Param params[4])
+{
+    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE,
+                                               TEE_PARAM_TYPE_NONE);
+
+    //DMSG("has been called");
+    if (param_types != exp_param_types)
+    return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+
+    int batch = params0[0];
+    int h = params0[1];
+    int w = params0[2];
+    int c = params0[3];
+
+    layer_TA lta = make_avgpool_layer_TA(batch, h, w, c);
     netta.layers[netnum] = lta;
     netnum++;
 
@@ -863,6 +891,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case MAKE_MAX_CMD:
         return make_maxpool_layer_TA_params(param_types, params);
+
+        case MAKE_AVG_CMD:
+        return make_avgpool_layer_TA_params(param_types, params);
 
         case MAKE_DROP_CMD:
         return make_dropout_layer_TA_params(param_types, params);

@@ -31,6 +31,8 @@
 #define BACKWARD_BACK_CMD 19
 #define BACKWARD_BACK_ADD_CMD 20
 
+#define MAKE_AVG_CMD 21
+
 #define TA_DARKNETP_UUID \
 	{ 0x7fc5c039, 0x0542, 0x4ee1, \
 		{ 0x80, 0xaf, 0xb4, 0xea, 0xb2, 0xf1, 0x99, 0x8d} }
@@ -54,6 +56,8 @@ void update_net_agrv_CA(int cond, int workspace_size, float *workspace);
 void make_convolutional_layer_CA(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam, int flipped, float dot);
 
 void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding);
+
+void make_avgpool_layer_CA(int batch, int h, int w, int c);
 
 void make_dropout_layer_CA(int batch, int inputs, float probability, int w, int h, int c, float *net_prev_output, float *net_prev_delta);
 
