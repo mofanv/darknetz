@@ -87,7 +87,8 @@ typedef enum {
     UPSAMPLE,
     LOGXENT,
     L2NORM,
-    BLANK
+    BLANK,
+    DEPTHWISE_CONVOLUTIONAL
 } LAYER_TYPE;
 
 typedef enum{
@@ -115,18 +116,18 @@ struct layer{
     LAYER_TYPE type;
     ACTIVATION activation;
     COST_TYPE cost_type;
-    
+
     void (*forward)   (struct layer, struct network);
     void (*backward)  (struct layer, struct network);
     void (*update)    (struct layer, update_args);
     void (*forward_gpu)   (struct layer, struct network);
     void (*backward_gpu)  (struct layer, struct network);
     void (*update_gpu)    (struct layer, update_args);
-    
+
     void (*forward_TA)   (struct layer, float* net_input, int net_train);
     void (*backward_TA)   (struct layer, struct network);
     void (*update_TA)    (struct layer, update_args);
-    
+
     int batch_normalize;
     int shortcut;
     int batch;
@@ -264,7 +265,7 @@ struct layer{
 
     float * m;
     float * v;
-    
+
     float * bias_m;
     float * bias_v;
     float * scale_m;
@@ -289,7 +290,7 @@ struct layer{
     float *g_cpu;
     float *o_cpu;
     float *c_cpu;
-    float *dc_cpu; 
+    float *dc_cpu;
 
     float * binary_input;
 
@@ -316,7 +317,7 @@ struct layer{
 
     struct layer *input_h_layer;
     struct layer *state_h_layer;
-	
+
     struct layer *wz;
     struct layer *uz;
     struct layer *wr;
@@ -356,7 +357,7 @@ struct layer{
     float *g_gpu;
     float *o_gpu;
     float *c_gpu;
-    float *dc_gpu; 
+    float *dc_gpu;
 
     float *m_gpu;
     float *v_gpu;

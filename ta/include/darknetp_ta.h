@@ -40,6 +40,7 @@ extern int debug_summary_pass;
 #define BACKWARD_BACK_ADD_CMD 20
 
 #define MAKE_AVG_CMD 21
+#define MAKE_DWCONV_CMD 22
 
 void summary_array(char *print_name, float *arr, int n);
 

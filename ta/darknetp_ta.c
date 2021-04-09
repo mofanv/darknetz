@@ -4,6 +4,7 @@
 #include "darknetp_ta.h"
 
 #include "convolutional_layer_TA.h"
+#include "depthwise_convolutional_layer_TA.h"
 #include "maxpool_layer_TA.h"
 #include "avgpool_layer_TA.h"
 #include "dropout_layer_TA.h"
@@ -215,6 +216,44 @@ static TEE_Result make_convolutional_layer_TA_params(uint32_t param_types,
     ACTIVATION_TA activation = get_activation_TA(acti);
 
     layer_TA lta = make_convolutional_layer_TA_new(batch, h, w, c, n, groups, size, stride, padding, activation, batch_normalize, binary, xnor, adam, flipped, dot);
+    netta.layers[netnum] = lta;
+    if (lta.workspace_size > netta.workspace_size) netta.workspace_size = lta.workspace_size;
+    netnum++;
+
+    return TEE_SUCCESS;
+}
+
+
+static TEE_Result make_depthwise_convolutional_layer_TA_params(uint32_t param_types, TEE_Param params[4])
+{
+  uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_VALUE_INPUT,
+                                             TEE_PARAM_TYPE_MEMREF_INPUT,
+                                             TEE_PARAM_TYPE_NONE);
+
+  //DMSG("has been called");
+  if (param_types != exp_param_types)
+  return TEE_ERROR_BAD_PARAMETERS;
+
+    int *params0 = params[0].memref.buffer;
+    float params1 = params[1].value.a;
+    char *params2 = params[2].memref.buffer;
+
+    int batch = params0[0];
+    int h = params0[1];
+    int w = params0[2];
+    int c = params0[3];
+    int size = params0[4];
+    int stride = params0[5];
+    int padding = params0[6];
+    int batch_normalize = params0[7];
+    int flipped = params0[8];
+    float dot = params1;
+    char *acti = params2;
+
+    ACTIVATION_TA activation = get_activation_TA(acti);
+
+    layer_TA lta = make_depthwise_convolutional_layer_TA_new(batch, h, w, c, size, stride, padding, activation, batch_normalize);
     netta.layers[netnum] = lta;
     if (lta.workspace_size > netta.workspace_size) netta.workspace_size = lta.workspace_size;
     netnum++;
@@ -888,6 +927,9 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 
         case MAKE_CONV_CMD:
         return make_convolutional_layer_TA_params(param_types, params);
+
+        case MAKE_DWCONV_CMD:
+        return make_depthwise_convolutional_layer_TA_params(param_types, params);
 
         case MAKE_MAX_CMD:
         return make_maxpool_layer_TA_params(param_types, params);

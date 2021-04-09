@@ -33,6 +33,8 @@
 
 #define MAKE_AVG_CMD 21
 
+#define MAKE_DWCONV_CMD 22
+
 #define TA_DARKNETP_UUID \
 	{ 0x7fc5c039, 0x0542, 0x4ee1, \
 		{ 0x80, 0xaf, 0xb4, 0xea, 0xb2, 0xf1, 0x99, 0x8d} }
@@ -54,6 +56,8 @@ void update_net_agrv_CA_allocateSM(int workspace_size, float *workspace);
 void update_net_agrv_CA(int cond, int workspace_size, float *workspace);
 
 void make_convolutional_layer_CA(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam, int flipped, float dot);
+
+void make_depthwise_convolutional_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int flipped, float dot);
 
 void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding);
 

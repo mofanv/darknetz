@@ -36,6 +36,7 @@
 #include "shortcut_layer.h"
 #include "parser.h"
 #include "data.h"
+#include "depthwise_convolutional_layer.h"
 
 int debug_summary_com = 0;
 int debug_summary_pass = 0;
@@ -560,6 +561,8 @@ int resize_network(network *net, int w, int h)
         layer l = net->layers[i];
         if(l.type == CONVOLUTIONAL){
             resize_convolutional_layer(&l, w, h);
+        }else if(l.type == DEPTHWISE_CONVOLUTIONAL){
+            resize_depthwise_convolutional_layer(&l, w, h);
         }else if(l.type == CROP){
             resize_crop_layer(&l, w, h);
         }else if(l.type == MAXPOOL){

@@ -94,9 +94,9 @@ void summary_array(char *print_name, float *arr, int n)
 
 void make_network_CA(int n, float learning_rate, float momentum, float decay, int time_steps, int notruth, int batch, int subdivisions, int random, int adam, float B1, float B2, float eps, int h, int w, int c, int inputs, int max_crop, int min_crop, float max_ratio, float min_ratio, int center, float clip, float angle, float aspect, float saturation, float exposure, float hue, int burn_in, float power, int max_batches)
 {
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
 
     int passint[17];
 
@@ -207,9 +207,9 @@ void update_net_agrv_CA(int cond, int workspace_size, float *workspace)
 
 void make_convolutional_layer_CA(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam, int flipped, float dot)
 {
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
 
     int passint[14];
     passint[0] = batch;
@@ -251,12 +251,55 @@ void make_convolutional_layer_CA(int batch, int h, int w, int c, int n, int grou
          res, origin);
 }
 
+
+void make_depthwise_convolutional_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int flipped, float dot)
+{
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
+
+    int passint[9];
+    passint[0] = batch;
+    passint[1] = h;
+    passint[2] = w;
+    passint[3] = c;
+    passint[4] = size;
+    passint[5] = stride;
+    passint[6] = padding;
+    passint[7] = batch_normalize;
+    passint[8] = flipped;
+
+    float passflo = dot;
+    char *acti = get_activation_string(activation);
+
+    memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_VALUE_INPUT,
+                                     TEEC_MEMREF_TEMP_INPUT, TEEC_NONE);
+
+    op.params[0].tmpref.buffer = passint;
+    op.params[0].tmpref.size = sizeof(passint);
+
+    op.params[1].value.a = passflo;
+
+    op.params[2].tmpref.buffer = acti;
+    op.params[2].tmpref.size = strlen(acti)+1;
+
+    res = TEEC_InvokeCommand(&sess, MAKE_DWCONV_CMD,
+                             &op, &origin);
+
+
+    if (res != TEEC_SUCCESS)
+    errx(1, "TEEC_InvokeCommand(DWCONV) failed 0x%x origin 0x%x",
+         res, origin);
+}
+
+
 void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride, int padding)
 {
   //invoke op and transfer paramters
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
 
     int passint[7];
     passint[0] = batch;
@@ -286,9 +329,9 @@ void make_maxpool_layer_CA(int batch, int h, int w, int c, int size, int stride,
 void make_avgpool_layer_CA(int batch, int h, int w, int c)
 {
   //invoke op and transfer paramters
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
 
     int passint[4];
     passint[0] = batch;
@@ -314,9 +357,9 @@ void make_avgpool_layer_CA(int batch, int h, int w, int c)
 void make_dropout_layer_CA(int batch, int inputs, float probability, int w, int h, int c, float *net_prev_output, float *net_prev_delta)
 {
   //invoke op and transfer paramters
-  TEEC_Operation op;
-  uint32_t origin;
-  TEEC_Result res;
+    TEEC_Operation op;
+    uint32_t origin;
+    TEEC_Result res;
 
     int passint[5];
     passint[0] = batch;

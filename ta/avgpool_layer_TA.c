@@ -1,9 +1,6 @@
 #include "avgpool_layer_TA.h"
-#include "math_TA.h"
 
 #include <stdio.h>
-#include <tee_internal_api.h>
-#include <tee_internal_api_extensions.h>
 
 avgpool_layer_TA make_avgpool_layer_TA(int batch, int w, int h, int c)
 {
